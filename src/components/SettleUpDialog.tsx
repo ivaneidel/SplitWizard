@@ -105,7 +105,7 @@ export function SettleUpDialog({
           type="button"
           disabled={busy || from === to || !amount}
           onClick={() => void submit()}
-          className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white disabled:opacity-50"
+          className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white disabled:opacity-50"
         >
           Record payment
         </button>

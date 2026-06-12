@@ -63,7 +63,7 @@ export function Search() {
           e.date >= fromMs &&
           e.date < toMs,
       )
-      .sort((a, b) => b.date - a.date)
+      .sort((a, b) => b.date - a.date || (b.createdAt ?? 0) - (a.createdAt ?? 0))
       .slice(0, 200)
   }, [expenses, q, from, to])
 
@@ -91,14 +91,14 @@ export function Search() {
             onClick={() => setShowFilters((v) => !v)}
             className={`relative rounded-lg border p-2.5 ${
               hasRange
-                ? 'border-emerald-500 text-emerald-600'
+                ? 'border-amber-500 text-amber-600'
                 : 'border-slate-300 text-slate-500 dark:border-zinc-600'
             }`}
             title="Date filter"
           >
             <SlidersHorizontal size={18} />
             {hasRange && (
-              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-amber-500" />
             )}
           </button>
 

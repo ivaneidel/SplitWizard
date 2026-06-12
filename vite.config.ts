@@ -16,7 +16,7 @@ export default defineConfig({
         name: 'SplitWizard',
         short_name: 'SplitWizard',
         description: 'Expense splitting with auto-installments',
-        theme_color: '#1cc29f',
+        theme_color: '#d97706',
         background_color: '#ffffff',
         display: 'standalone',
         start_url: '/',
@@ -28,6 +28,17 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
+          },
+        ],
+        // Android long-press launcher shortcut. Web manifests only support
+        // static shortcuts (no dynamic per-group entries). /add resolves to the
+        // last-viewed group or a group picker.
+        shortcuts: [
+          {
+            name: 'Add expense',
+            short_name: 'Add expense',
+            url: '/add',
+            icons: [{ src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
           },
         ],
       },

@@ -190,7 +190,7 @@ export function ImportExport() {
                   Detect installment plans
                 </label>
                 {detect && detection.plans.length > 0 && (
-                  <p className="text-xs text-emerald-600">
+                  <p className="text-xs text-amber-600">
                     Detected {detection.plans.length} installment plan
                     {detection.plans.length > 1 ? 's' : ''} (
                     {detection.plans
@@ -215,7 +215,7 @@ export function ImportExport() {
                   type="button"
                   disabled={busy || preview.length === 0}
                   onClick={() => void doImport()}
-                  className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white disabled:opacity-50"
+                  className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white disabled:opacity-50"
                 >
                   {busy ? 'Importing…' : `Import ${preview.length} expenses`}
                 </button>
@@ -225,7 +225,7 @@ export function ImportExport() {
         </>
       )}
 
-      {done && <p className="text-sm text-emerald-600">{done}</p>}
+      {done && <p className="text-sm text-amber-600">{done}</p>}
     </div>
   )
 }

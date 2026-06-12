@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { ArrowLeft, Plus, Settings } from 'lucide-react'
 import { useGroups, useGroupData } from '../hooks/useGroups'
@@ -19,6 +19,12 @@ export function GroupPage() {
 
   const [showSettle, setShowSettle] = useState(false)
 
+  // Remember the most recently viewed group so the PWA "Add expense" shortcut
+  // (/add) can land straight on it.
+  useEffect(() => {
+    if (group) localStorage.setItem('lastGroupId', group.id)
+  }, [group])
+
   const nameOf = (uid: string) =>
     group?.members[uid]?.displayName ?? (uid === user?.uid ? 'You' : uid.slice(0, 6))
 
@@ -37,7 +43,9 @@ export function GroupPage() {
     return <p className="text-slate-400">Loading group…</p>
   }
 
-  const visibleExpenses = expenses.filter((e) => !e.deleted)
+  const visibleExpenses = expenses
+    .filter((e) => !e.deleted)
+    .sort((a, b) => b.date - a.date || (b.createdAt ?? 0) - (a.createdAt ?? 0))
   // Group the (already date-desc) list into month sections, with per-currency totals.
   const monthGroups: { label: string; items: Expense[]; total: AmountMap }[] = []
   for (const e of visibleExpenses) {
@@ -95,14 +103,14 @@ export function GroupPage() {
       <div className="flex gap-2">
         <Link
           to={`/groups/${group.id}/add`}
-          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-600 py-2 font-medium text-white"
+          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-amber-600 py-2 font-medium text-white"
         >
           <Plus size={16} /> Add expense
         </Link>
         <button
           type="button"
           onClick={() => setShowSettle(true)}
-          className="flex-1 rounded-lg border border-emerald-600 py-2 font-medium text-emerald-700 dark:text-emerald-400"
+          className="flex-1 rounded-lg border border-amber-600 py-2 font-medium text-amber-700 dark:text-amber-400"
         >
           Settle up
         </button>
@@ -151,7 +159,7 @@ export function GroupPage() {
                           <div
                             className={
                               net > 0
-                                ? 'text-xs text-emerald-400 dark:text-emerald-300'
+                                ? 'text-xs text-amber-400 dark:text-amber-300'
                                 : 'text-xs text-rose-400 dark:text-rose-300'
                             }
                           >
@@ -203,7 +211,7 @@ function CurrencyBalanceCard({
 
   const tone = (v: number) =>
     v > 0
-      ? 'text-emerald-600 dark:text-emerald-400'
+      ? 'text-amber-600 dark:text-amber-400'
       : v < 0
         ? 'text-rose-600 dark:text-rose-400'
         : 'text-slate-400'
@@ -222,7 +230,7 @@ function CurrencyBalanceCard({
           {debts.map((d, i) => (
             <li key={i} className="text-sm">
               <span className="font-medium text-red-600">{nameOf(d.from)}</span> owes{' '}
-              <span className="font-medium text-emerald-600">{nameOf(d.to)}</span>{' '}
+              <span className="font-medium text-amber-600">{nameOf(d.to)}</span>{' '}
               {formatMoney(d.amount, currency)}
             </li>
           ))}
@@ -232,7 +240,7 @@ function CurrencyBalanceCard({
           {rawNets.map(([uid, v]) => (
             <li key={uid} className="text-sm">
               {nameOf(uid)}{' '}
-              <span className={v > 0 ? 'text-emerald-600' : 'text-red-600'}>
+              <span className={v > 0 ? 'text-amber-600' : 'text-red-600'}>
                 {v > 0 ? 'is owed' : 'owes'} {formatMoney(Math.abs(v), currency)}
               </span>
             </li>

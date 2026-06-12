@@ -21,7 +21,7 @@ import { monthKey } from '../lib/forecast'
 import { formatMoney, toMajor, toMinor } from '../lib/money'
 import { deleteBudget, setBudget } from '../lib/firestore'
 
-const COLORS = ['#1cc29f', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
+const COLORS = ['#d97706', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function Charts() {
@@ -118,7 +118,7 @@ export function Charts() {
             <BarChart data={barData}>
               <XAxis dataKey="month" fontSize={10} />
               <Tooltip />
-              <Bar dataKey="value" fill="#1cc29f" />
+              <Bar dataKey="value" fill="#d97706" />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -158,7 +158,7 @@ export function Charts() {
               {cap > 0 && (
                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
                   <div
-                    className={over ? 'h-full bg-red-500' : 'h-full bg-emerald-500'}
+                    className={over ? 'h-full bg-red-500' : 'h-full bg-amber-500'}
                     style={{ width: `${pct}%` }}
                   />
                 </div>

@@ -82,7 +82,7 @@ export function SplitEditor({
             className={cn(
               'flex-1 rounded-md py-1.5 text-sm font-medium',
               mode === m.key
-                ? 'bg-white text-emerald-700 shadow-sm dark:bg-zinc-800 dark:text-emerald-400'
+                ? 'bg-white text-amber-700 shadow-sm dark:bg-zinc-800 dark:text-amber-400'
                 : 'text-slate-500 dark:text-zinc-400',
             )}
           >
@@ -123,7 +123,7 @@ export function SplitEditor({
       <div
         className={cn(
           'text-right text-sm',
-          valid ? 'text-emerald-600' : 'text-red-600',
+          valid ? 'text-amber-600' : 'text-red-600',
         )}
       >
         {formatMoney(total, currency)} / {formatMoney(amount, currency)}

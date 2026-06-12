@@ -126,12 +126,12 @@ export function GroupSettings() {
               className="h-14 w-14 rounded-full object-cover"
             />
           ) : (
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
               <Users size={22} />
             </div>
           )}
           <div className="flex flex-col gap-1 text-sm">
-            <label className="cursor-pointer font-medium text-emerald-600">
+            <label className="cursor-pointer font-medium text-amber-600">
               {group.photoURL ? 'Change photo' : 'Add photo'}
               <input
                 type="file"
@@ -198,7 +198,7 @@ export function GroupSettings() {
                 <span>
                   {m?.displayName ?? uid.slice(0, 6)}
                   {uid === group.createdBy && (
-                    <span className="ml-2 text-xs text-emerald-600">owner</span>
+                    <span className="ml-2 text-xs text-amber-600">owner</span>
                   )}
                   {m?.placeholder && (
                     <span className="ml-2 rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-500 dark:bg-zinc-700 dark:text-zinc-300">
@@ -211,7 +211,7 @@ export function GroupSettings() {
                     <button
                       type="button"
                       onClick={() => void linkGuest(uid)}
-                      className="flex items-center gap-1 rounded-lg border border-emerald-300 px-2 py-1.5 text-xs font-medium text-emerald-600 dark:border-emerald-700"
+                      className="flex items-center gap-1 rounded-lg border border-amber-300 px-2 py-1.5 text-xs font-medium text-amber-600 dark:border-amber-700"
                       title="Link to a real account"
                     >
                       <Link2 size={16} /> Link
@@ -246,7 +246,7 @@ export function GroupSettings() {
               className={cn(
                 'flex-1 rounded-md py-1 font-medium',
                 guestMode === o.v
-                  ? 'bg-white text-emerald-700 shadow-sm dark:bg-zinc-800 dark:text-emerald-400'
+                  ? 'bg-white text-amber-700 shadow-sm dark:bg-zinc-800 dark:text-amber-400'
                   : 'text-slate-500 dark:text-zinc-400',
               )}
             >
@@ -265,7 +265,7 @@ export function GroupSettings() {
             type="button"
             disabled={busy || !email.trim()}
             onClick={() => void addMember()}
-            className="flex shrink-0 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white disabled:opacity-50"
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-amber-600 px-3 text-sm font-medium text-white disabled:opacity-50"
           >
             <UserPlus size={16} /> Add
           </button>

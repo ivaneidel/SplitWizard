@@ -19,7 +19,7 @@ function GroupRow({ g }: { g: Group }) {
   return (
     <Link
       to={`/groups/${g.id}`}
-      className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-emerald-300 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-emerald-600"
+      className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-amber-300 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-amber-600"
     >
       {g.photoURL ? (
         <img
@@ -28,7 +28,7 @@ function GroupRow({ g }: { g: Group }) {
           className="h-10 w-10 shrink-0 rounded-full object-cover"
         />
       ) : (
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300">
           <Users size={18} />
         </span>
       )}
@@ -104,15 +104,15 @@ export function Dashboard() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white"
+          className="flex items-center gap-1 rounded-lg bg-amber-600 px-3 py-2 text-sm font-medium text-white"
         >
           <Plus size={16} /> New
         </button>
       </div>
 
       {monthEntries.length > 0 && (
-        <div className="rounded-lg bg-emerald-50 p-4 dark:bg-emerald-950">
-          <div className="text-sm text-emerald-700 dark:text-emerald-400">
+        <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950">
+          <div className="text-sm text-amber-700 dark:text-amber-400">
             This month
           </div>
           <ul className="mt-1 space-y-0.5">
@@ -121,7 +121,7 @@ export function Dashboard() {
                 key={cur}
                 className={
                   net > 0
-                    ? 'font-semibold text-emerald-800 dark:text-emerald-300'
+                    ? 'font-semibold text-amber-800 dark:text-amber-300'
                     : 'font-semibold text-rose-700 dark:text-rose-300'
                 }
               >
@@ -191,7 +191,7 @@ export function Dashboard() {
             type="button"
             disabled={busy || !name.trim()}
             onClick={() => void submit()}
-            className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white disabled:opacity-50"
+            className="w-full rounded-lg bg-amber-600 py-2 font-medium text-white disabled:opacity-50"
           >
             Create
           </button>

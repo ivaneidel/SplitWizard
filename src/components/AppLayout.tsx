@@ -1,38 +1,43 @@
-import { NavLink, Outlet } from 'react-router-dom'
+import { NavLink, Outlet } from "react-router-dom";
 import {
   Activity,
   CalendarClock,
   LayoutDashboard,
   PieChart,
   Search,
-} from 'lucide-react'
-import { useAuth } from '../hooks/useAuth'
+} from "lucide-react";
+import { useAuth } from "../hooks/useAuth";
 
 const NAV = [
-  { to: '/', label: 'Home', icon: LayoutDashboard, end: true },
-  { to: '/installments', label: 'Plans', icon: CalendarClock },
-  { to: '/search', label: 'Search', icon: Search },
-  { to: '/charts', label: 'Charts', icon: PieChart },
-  { to: '/activity', label: 'Activity', icon: Activity },
-]
+  { to: "/", label: "Home", icon: LayoutDashboard, end: true },
+  { to: "/installments", label: "Plans", icon: CalendarClock },
+  { to: "/search", label: "Search", icon: Search },
+  { to: "/charts", label: "Charts", icon: PieChart },
+  { to: "/activity", label: "Activity", icon: Activity },
+];
 
 export function AppLayout() {
-  const { profile } = useAuth()
+  const { profile } = useAuth();
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
-        <NavLink to="/" className="font-bold text-emerald-600">
+        <NavLink to="/" className="font-bold text-amber-600">
           SplitWizard
         </NavLink>
         {profile && (
-          <NavLink to="/settings" className="text-sm text-slate-500 dark:text-zinc-400">
+          <NavLink
+            to="/settings"
+            className="text-sm text-slate-500 dark:text-zinc-400"
+          >
             {profile.displayName}
           </NavLink>
         )}
       </header>
 
-      <main className="flex-1 overflow-y-auto p-4 pb-24">
-        <Outlet />
+      <main className="flex flex-1 overflow-y-auto p-4 pb-24">
+        <div className="flex min-w-full items-stretch flex-col">
+          <Outlet />
+        </div>
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-3xl justify-around border-t border-slate-200 bg-white py-2 dark:border-zinc-700 dark:bg-zinc-800">
@@ -43,7 +48,7 @@ export function AppLayout() {
             end={end}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-1 text-xs ${
-                isActive ? 'text-emerald-600' : 'text-slate-400'
+                isActive ? "text-amber-600" : "text-slate-400"
               }`
             }
           >
@@ -53,5 +58,5 @@ export function AppLayout() {
         ))}
       </nav>
     </div>
-  )
+  );
 }

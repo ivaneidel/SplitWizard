@@ -36,6 +36,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/groups/:groupId" element={<GroupPage />} />
         <Route path="/groups/:groupId/settings" element={<GroupSettings />} />
+        <Route path="/add" element={<AddExpense />} />
         <Route path="/groups/:groupId/add" element={<AddExpense />} />
         <Route
           path="/groups/:groupId/expenses/:expenseId/edit"
