@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+import { FileSpreadsheet } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme, type Theme } from '../hooks/useTheme'
 import { updateProfile } from '../lib/firestore'
@@ -78,6 +80,19 @@ export function Settings() {
           </select>
         </div>
       )}
+
+      {/* Data */}
+      <div className="space-y-2">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
+          Data
+        </h2>
+        <Link
+          to="/import"
+          className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-3 font-medium dark:border-zinc-700"
+        >
+          <FileSpreadsheet size={18} /> Import / Export
+        </Link>
+      </div>
 
       <button
         type="button"

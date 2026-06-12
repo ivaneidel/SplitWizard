@@ -9,6 +9,7 @@ import { GroupSettings } from './pages/GroupSettings'
 import { AddExpense } from './pages/AddExpense'
 import { Installments } from './pages/Installments'
 import { Search } from './pages/Search'
+import { Activity } from './pages/Activity'
 import { Settings } from './pages/Settings'
 
 // Heavy deps (recharts, xlsx) are code-split so they don't bloat the initial load.
@@ -42,6 +43,7 @@ export default function App() {
         />
         <Route path="/installments" element={<Installments />} />
         <Route path="/search" element={<Search />} />
+        <Route path="/activity" element={<Activity />} />
         <Route
           path="/charts"
           element={

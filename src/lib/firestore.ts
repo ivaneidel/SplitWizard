@@ -363,9 +363,29 @@ export async function addSettlement(
   const ref = await addDoc(settlementsCol(groupId), {
     ...data,
     groupId,
+    participantUids: [data.from, data.to],
     createdAt: now(),
   })
   return ref.id
+}
+
+/** All of a user's settlements across every group (for the Activity feed). */
+export function watchAllUserSettlements(
+  uid: string,
+  cb: (settlements: Settlement[]) => void,
+): () => void {
+  const q = query(
+    collectionGroup(db, 'settlements'),
+    where('participantUids', 'array-contains', uid),
+  )
+  return onSnapshot(q, (snap) =>
+    cb(
+      snap.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Omit<Settlement, 'id'>),
+      })),
+    ),
+  )
 }
 
 export function watchGroupSettlements(

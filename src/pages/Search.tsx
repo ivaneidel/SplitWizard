@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Search as SearchIcon } from 'lucide-react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { Search as SearchIcon, SlidersHorizontal } from 'lucide-react'
 import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useGroups } from '../hooks/useGroups'
 import { formatMoney, toMajor } from '../lib/money'
@@ -27,9 +27,24 @@ const INPUT =
 export function Search() {
   const { expenses } = useAllExpenses()
   const { groups } = useGroups()
-  const [q, setQ] = useState('')
-  const [from, setFrom] = useState('')
-  const [to, setTo] = useState('')
+  // Search state lives in the URL so the browser back button restores it
+  // (Home → Search → edit an expense → back → same query + filters).
+  const [params, setParams] = useSearchParams()
+  const q = params.get('q') ?? ''
+  const from = params.get('from') ?? ''
+  const to = params.get('to') ?? ''
+  const [showFilters, setShowFilters] = useState(false)
+
+  const update = (key: string, val: string) =>
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev)
+        if (val) next.set(key, val)
+        else next.delete(key)
+        return next
+      },
+      { replace: true },
+    )
 
   const groupName = (id: string) =>
     groups.find((g) => g.id === id)?.name ?? 'Group'
@@ -52,43 +67,85 @@ export function Search() {
       .slice(0, 200)
   }, [expenses, q, from, to])
 
+  const hasRange = Boolean(from || to)
+
   return (
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Search all over</h1>
 
-      <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 dark:border-zinc-600 dark:bg-zinc-800">
-        <SearchIcon size={18} className="text-slate-400" />
-        <input
-          autoFocus
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-          placeholder="Description or amount…"
-          className="w-full bg-transparent py-2 outline-none"
-        />
+      <div className="flex items-center gap-2">
+        <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 dark:border-zinc-600 dark:bg-zinc-800">
+          <SearchIcon size={18} className="text-slate-400" />
+          <input
+            value={q}
+            onChange={(e) => update('q', e.target.value)}
+            placeholder="Description or amount…"
+            className="w-full bg-transparent py-2 outline-none"
+          />
+        </div>
+
+        {/* Filter popup */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowFilters((v) => !v)}
+            className={`relative rounded-lg border p-2.5 ${
+              hasRange
+                ? 'border-emerald-500 text-emerald-600'
+                : 'border-slate-300 text-slate-500 dark:border-zinc-600'
+            }`}
+            title="Date filter"
+          >
+            <SlidersHorizontal size={18} />
+            {hasRange && (
+              <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-emerald-500" />
+            )}
+          </button>
+
+          {showFilters && (
+            <>
+              <div
+                className="fixed inset-0 z-10"
+                onClick={() => setShowFilters(false)}
+              />
+              <div className="absolute right-0 z-20 mt-2 w-64 space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+                <label className="block text-sm">
+                  <span className="text-slate-400">From</span>
+                  <input
+                    type="date"
+                    value={from}
+                    onChange={(e) => update('from', e.target.value)}
+                    className={`mt-1 w-full ${INPUT}`}
+                  />
+                </label>
+                <label className="block text-sm">
+                  <span className="text-slate-400">To</span>
+                  <input
+                    type="date"
+                    value={to}
+                    onChange={(e) => update('to', e.target.value)}
+                    className={`mt-1 w-full ${INPUT}`}
+                  />
+                </label>
+                {hasRange && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      update('from', '')
+                      update('to', '')
+                    }}
+                    className="text-sm text-slate-400"
+                  >
+                    Clear dates
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
-      <div className="flex items-center gap-2 text-sm">
-        <label className="flex-1">
-          <span className="text-slate-400">From</span>
-          <input
-            type="date"
-            value={from}
-            onChange={(e) => setFrom(e.target.value)}
-            className={`mt-1 w-full ${INPUT}`}
-          />
-        </label>
-        <label className="flex-1">
-          <span className="text-slate-400">To</span>
-          <input
-            type="date"
-            value={to}
-            onChange={(e) => setTo(e.target.value)}
-            className={`mt-1 w-full ${INPUT}`}
-          />
-        </label>
-      </div>
-
-      {(q.trim() || from || to) && (
+      {(q.trim() || hasRange) && (
         <p className="text-sm text-slate-400">
           {results.length} result{results.length === 1 ? '' : 's'}
         </p>

@@ -7,7 +7,8 @@ import {
 import { remapKey, remapList } from './claim'
 import { formatDate, monthYearLabel } from './date'
 import { forecastByMonth, monthKey, planProgress } from './forecast'
-import type { Expense } from '../types'
+import { buildActivity } from './activity'
+import type { Expense, Settlement } from '../types'
 
 const sum = (m: Record<string, number>) =>
   Object.values(m).reduce((a, b) => a + b, 0)
@@ -130,6 +131,60 @@ describe('installment detection', () => {
     ])
     expect(plans).toHaveLength(1)
     expect(singles.map((s) => s.description)).toEqual(['Carrefour'])
+  })
+})
+
+describe('buildActivity', () => {
+  const exp = (over: Partial<Expense>): Expense => ({
+    id: 'e1',
+    groupId: 'g',
+    description: 'Dinner',
+    amount: 1000,
+    currency: 'USD',
+    fxRate: 1,
+    category: 'dining',
+    date: Date.UTC(2026, 0, 1),
+    splitMode: 'equal',
+    paidBy: { me: 1000 },
+    splits: { me: 500, you: 500 },
+    participantUids: ['me', 'you'],
+    createdBy: 'me',
+    createdAt: 100,
+    updatedAt: 100,
+    ...over,
+  })
+  const settle = (over: Partial<Settlement>): Settlement => ({
+    id: 's1',
+    groupId: 'g',
+    from: 'you',
+    to: 'me',
+    amount: 500,
+    currency: 'USD',
+    fxRate: 1,
+    date: Date.UTC(2026, 0, 2),
+    createdBy: 'you',
+    createdAt: 200,
+    ...over,
+  })
+
+  it('merges newest-first and computes the user net', () => {
+    const a = buildActivity([exp({})], [settle({})], 'me')
+    expect(a.map((x) => x.kind)).toEqual(['settle', 'expense']) // settle is newer
+    const e = a.find((x) => x.kind === 'expense')!
+    expect(e.youNet).toBe(500) // paid 1000, owed 500 → lent 500
+    const s = a.find((x) => x.kind === 'settle')!
+    expect(s.youNet).toBe(500) // you received 500
+    expect(s.toUid).toBe('me')
+  })
+
+  it('settlement net is negative for the payer and skips deleted expenses', () => {
+    const a = buildActivity(
+      [exp({ deleted: true })],
+      [settle({ from: 'me', to: 'you' })],
+      'me',
+    )
+    expect(a).toHaveLength(1)
+    expect(a[0].youNet).toBe(-500) // you paid 500
   })
 })
 

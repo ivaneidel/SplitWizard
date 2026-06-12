@@ -74,3 +74,40 @@ tests green, build clean).
 
 > Verification after Batch 6: 39 unit tests green; `tsc` + production build clean.
 > Deployed to https://splitwizard.web.app.
+
+## Batch 7 — totals, mobile polish, group photos, Activity
+- **Group totals** — per-currency balance card now shows a **per-person all-time vs
+  this-month** net table (`computeBalances` on a month-filtered slice).
+- **Home month banner** — emerald summary of the user's net this month across all groups
+  (`analytics.userMonthlyNet`).
+- **Month-section totals** — each month divider in a group shows that month's total per currency.
+- **Mobile fixes** — viewport `maximum-scale=1, user-scalable=no` (no web zoom);
+  Search From/To date inputs `min-w-0` (no iOS overlap); Group Settings Add row
+  `min-w-0`/`shrink-0` (no overflow); bigger Link/Remove tap targets + a **confirm** on
+  member removal.
+- **Import moved** off the bottom nav into **Settings → Data → Import / Export**.
+- **Group photos** — `compressImage` (`src/lib/image.ts`) downsizes to a ≤250 KB JPEG
+  **data URL** stored on the group doc (no Firebase Storage needed); shown as the group
+  **avatar** (home) and **hero** (group header). Upload/remove in Group Settings.
+- **Activity tab** (new bottom-nav slot) — a global, retroactive feed merging expenses +
+  settlements across all groups (`src/lib/activity.ts` `buildActivity`), grouped by day,
+  each row showing actor/action/group, amount, and your pastel green/rose stake.
+  Settlements gained `participantUids:[from,to]` + a `watchAllUserSettlements`
+  collection-group query (auto single-field index; no manual index needed).
+- Split default confirmed **Equal** for new expenses (no change).
+
+> Verification after Batch 7: 41 unit tests + 6 emulator rules tests green; `tsc` +
+> production build clean. Deployed to https://splitwizard.web.app.
+
+## Batch 8 — search UX & cleanup
+- **Group hero removed** — replaced by a small avatar next to the group title (the
+  full-width banner was cluttering).
+- **Search date filter in a popup** — the From/To inputs moved into a dropdown panel
+  behind a filter button (`SlidersHorizontal`), stacked vertically, with a "Clear dates"
+  action and an active dot when a range is set.
+- **Search state persists in the URL** (`useSearchParams`, `replace:true`) — so the
+  flow Home → Search → (type) → open an expense → **back** returns to Search with the
+  exact query + filters intact.
+
+> Verification after Batch 8: 41 unit tests green; `tsc` + production build clean.
+> Deployed to https://splitwizard.web.app.

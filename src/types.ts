@@ -44,6 +44,8 @@ export interface Group {
   simplifyDebts: boolean
   /** Hidden from the main list when true. */
   archived?: boolean
+  /** Compressed JPEG data URL — used as the group avatar + hero. */
+  photoURL?: string
   createdBy: string
   createdAt: number
 }
@@ -89,6 +91,8 @@ export interface Settlement {
   fxRate: number
   date: number
   note?: string
+  /** [from, to] — denormalized for cross-group collection-group queries. */
+  participantUids?: string[]
   createdBy: string
   createdAt: number
 }

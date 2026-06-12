@@ -1,7 +1,7 @@
 import { NavLink, Outlet } from 'react-router-dom'
 import {
+  Activity,
   CalendarClock,
-  FileSpreadsheet,
   LayoutDashboard,
   PieChart,
   Search,
@@ -13,7 +13,7 @@ const NAV = [
   { to: '/installments', label: 'Plans', icon: CalendarClock },
   { to: '/search', label: 'Search', icon: Search },
   { to: '/charts', label: 'Charts', icon: PieChart },
-  { to: '/import', label: 'Import', icon: FileSpreadsheet },
+  { to: '/activity', label: 'Activity', icon: Activity },
 ]
 
 export function AppLayout() {

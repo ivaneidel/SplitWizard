@@ -2,8 +2,12 @@ import { useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus, Users } from 'lucide-react'
 import { useGroups } from '../hooks/useGroups'
+import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useAuth } from '../hooks/useAuth'
 import { createGroup } from '../lib/firestore'
+import { userMonthlyNet } from '../lib/analytics'
+import { monthKey } from '../lib/forecast'
+import { formatMoney } from '../lib/money'
 import { Modal } from '../components/Modal'
 import type { Group } from '../types'
 
@@ -17,9 +21,17 @@ function GroupRow({ g }: { g: Group }) {
       to={`/groups/${g.id}`}
       className="flex items-center gap-3 rounded-lg border border-slate-200 bg-white p-4 transition hover:border-emerald-300 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-emerald-600"
     >
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
-        <Users size={18} />
-      </span>
+      {g.photoURL ? (
+        <img
+          src={g.photoURL}
+          alt=""
+          className="h-10 w-10 shrink-0 rounded-full object-cover"
+        />
+      ) : (
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+          <Users size={18} />
+        </span>
+      )}
       <span className="flex-1">
         <span className="block font-medium">{g.name}</span>
         <span className="block text-sm text-slate-400">
@@ -40,8 +52,24 @@ export function Dashboard() {
   const [currency, setCurrency] = useState('ARS')
   const [busy, setBusy] = useState(false)
 
-  const active = useMemo(() => groups.filter((g) => !g.archived), [groups])
-  const archived = useMemo(() => groups.filter((g) => g.archived), [groups])
+  const byName = (a: Group, b: Group) =>
+    a.name.localeCompare(b.name, undefined, { sensitivity: 'base' })
+  const active = useMemo(
+    () => groups.filter((g) => !g.archived).sort(byName),
+    [groups],
+  )
+  const archived = useMemo(
+    () => groups.filter((g) => g.archived).sort(byName),
+    [groups],
+  )
+
+  const { expenses } = useAllExpenses()
+  const thisMonth = monthKey(Date.now())
+  const monthNet = useMemo(
+    () => (user ? userMonthlyNet(expenses, user.uid, thisMonth) : {}),
+    [expenses, user, thisMonth],
+  )
+  const monthEntries = Object.entries(monthNet)
 
   const submit = async () => {
     if (!user || !profile || !name.trim()) return
@@ -81,6 +109,29 @@ export function Dashboard() {
           <Plus size={16} /> New
         </button>
       </div>
+
+      {monthEntries.length > 0 && (
+        <div className="rounded-lg bg-emerald-50 p-4 dark:bg-emerald-950">
+          <div className="text-sm text-emerald-700 dark:text-emerald-400">
+            This month
+          </div>
+          <ul className="mt-1 space-y-0.5">
+            {monthEntries.map(([cur, net]) => (
+              <li
+                key={cur}
+                className={
+                  net > 0
+                    ? 'font-semibold text-emerald-800 dark:text-emerald-300'
+                    : 'font-semibold text-rose-700 dark:text-rose-300'
+                }
+              >
+                {net > 0 ? 'you lent ' : 'you owe '}
+                {formatMoney(Math.abs(net), cur)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {loading && <p className="text-slate-400">Loading…</p>}
       {!loading && active.length === 0 && (

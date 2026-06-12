@@ -43,6 +43,25 @@ export function spendByMonth(
     .sort((a, b) => a.month.localeCompare(b.month))
 }
 
+/**
+ * The user's own net (paid − owed) per currency for a given month bucket,
+ * across whatever expenses are passed in. Positive = you lent; negative = you owe.
+ */
+export function userMonthlyNet(
+  expenses: Expense[],
+  uid: string,
+  month: string,
+): Record<string, number> {
+  const out: Record<string, number> = {}
+  for (const e of expenses) {
+    if (e.deleted || monthKey(e.date) !== month) continue
+    const net = (e.paidBy[uid] ?? 0) - (e.splits[uid] ?? 0)
+    if (net === 0) continue
+    out[e.currency] = (out[e.currency] ?? 0) + net
+  }
+  return out
+}
+
 /** Distinct currencies present in the expense set. */
 export function currenciesIn(expenses: Expense[]): string[] {
   return [...new Set(expenses.filter((e) => !e.deleted).map((e) => e.currency))]

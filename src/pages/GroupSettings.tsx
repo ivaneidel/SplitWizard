@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Link2, UserMinus, UserPlus } from 'lucide-react'
+import { ArrowLeft, Link2, UserMinus, UserPlus, Users } from 'lucide-react'
 import { useGroups } from '../hooks/useGroups'
 import { useAuth } from '../hooks/useAuth'
 import {
@@ -13,6 +13,7 @@ import {
   updateGroup,
 } from '../lib/firestore'
 import { addMemberByEmail, addPlaceholderMember } from '../lib/members'
+import { compressImage } from '../lib/image'
 import { cn } from '../lib/cn'
 
 const CURRENCIES = ['ARS', 'USD', 'EUR', 'BRL', 'CLP', 'UYU']
@@ -58,6 +59,24 @@ export function GroupSettings() {
     }
   }
 
+  const uploadPhoto = async (file: File) => {
+    setError('')
+    setBusy(true)
+    try {
+      const photoURL = await compressImage(file)
+      await updateGroup(group.id, { photoURL })
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not process image.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const confirmRemove = async (uid: string, name: string) => {
+    if (!confirm(`Remove ${name} from “${group.name}”?`)) return
+    await removeMember(group, uid)
+  }
+
   const linkGuest = async (guestId: string) => {
     const e = window.prompt('Email of the account to link to this guest:')
     if (!e) return
@@ -99,6 +118,41 @@ export function GroupSettings() {
 
       {/* Edit */}
       <div className={`${CARD} space-y-3`}>
+        <div className="flex items-center gap-3">
+          {group.photoURL ? (
+            <img
+              src={group.photoURL}
+              alt=""
+              className="h-14 w-14 rounded-full object-cover"
+            />
+          ) : (
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300">
+              <Users size={22} />
+            </div>
+          )}
+          <div className="flex flex-col gap-1 text-sm">
+            <label className="cursor-pointer font-medium text-emerald-600">
+              {group.photoURL ? 'Change photo' : 'Add photo'}
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) =>
+                  e.target.files?.[0] && void uploadPhoto(e.target.files[0])
+                }
+              />
+            </label>
+            {group.photoURL && (
+              <button
+                type="button"
+                onClick={() => void updateGroup(group.id, { photoURL: '' })}
+                className="text-left text-xs text-slate-400"
+              >
+                Remove photo
+              </button>
+            )}
+          </div>
+        </div>
         <label className="block text-sm">
           Name
           <input
@@ -152,25 +206,25 @@ export function GroupSettings() {
                     </span>
                   )}
                 </span>
-                <span className="flex items-center gap-3">
+                <span className="flex items-center gap-2">
                   {m?.placeholder && (
                     <button
                       type="button"
                       onClick={() => void linkGuest(uid)}
-                      className="flex items-center gap-1 text-xs text-emerald-600"
+                      className="flex items-center gap-1 rounded-lg border border-emerald-300 px-2 py-1.5 text-xs font-medium text-emerald-600 dark:border-emerald-700"
                       title="Link to a real account"
                     >
-                      <Link2 size={14} /> Link
+                      <Link2 size={16} /> Link
                     </button>
                   )}
                   {isOwner && uid !== user.uid && (
                     <button
                       type="button"
-                      onClick={() => void removeMember(group, uid)}
-                      className="text-red-500"
+                      onClick={() => void confirmRemove(uid, m?.displayName ?? 'this member')}
+                      className="rounded-lg p-2 text-red-500"
                       title="Remove"
                     >
-                      <UserMinus size={16} />
+                      <UserMinus size={18} />
                     </button>
                   )}
                 </span>
@@ -205,13 +259,13 @@ export function GroupSettings() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder={guestMode ? 'Guest name' : 'email@example.com'}
-            className={`flex-1 ${INPUT}`}
+            className={`min-w-0 flex-1 ${INPUT}`}
           />
           <button
             type="button"
             disabled={busy || !email.trim()}
             onClick={() => void addMember()}
-            className="flex items-center gap-1 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white disabled:opacity-50"
+            className="flex shrink-0 items-center gap-1 rounded-lg bg-emerald-600 px-3 text-sm font-medium text-white disabled:opacity-50"
           >
             <UserPlus size={16} /> Add
           </button>
