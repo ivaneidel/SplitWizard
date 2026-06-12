@@ -73,7 +73,7 @@ export function SplitEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-700">
+      <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-zinc-700">
         {MODES.map((m) => (
           <button
             key={m.key}
@@ -82,8 +82,8 @@ export function SplitEditor({
             className={cn(
               'flex-1 rounded-md py-1.5 text-sm font-medium',
               mode === m.key
-                ? 'bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400'
-                : 'text-slate-500 dark:text-slate-400',
+                ? 'bg-white text-emerald-700 shadow-sm dark:bg-zinc-800 dark:text-emerald-400'
+                : 'text-slate-500 dark:text-zinc-400',
             )}
           >
             {m.label}
@@ -109,7 +109,7 @@ export function SplitEditor({
                     setRaw((r) => ({ ...r, [uid]: e.target.value }))
                   }
                   placeholder={mode === 'percent' ? '%' : mode === 'shares' ? '1' : '0'}
-                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-slate-600 dark:bg-slate-800"
+                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-zinc-600 dark:bg-zinc-800"
                 />
                 <span className="w-20 text-right text-xs text-slate-400">
                   {formatMoney(splits[uid] ?? 0, currency)}

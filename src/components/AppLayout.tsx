@@ -20,12 +20,12 @@ export function AppLayout() {
   const { profile } = useAuth()
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-slate-700 dark:bg-slate-800">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
         <NavLink to="/" className="font-bold text-emerald-600">
           SplitWizard
         </NavLink>
         {profile && (
-          <NavLink to="/settings" className="text-sm text-slate-500 dark:text-slate-400">
+          <NavLink to="/settings" className="text-sm text-slate-500 dark:text-zinc-400">
             {profile.displayName}
           </NavLink>
         )}
@@ -35,7 +35,7 @@ export function AppLayout() {
         <Outlet />
       </main>
 
-      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-3xl justify-around border-t border-slate-200 bg-white py-2 dark:border-slate-700 dark:bg-slate-800">
+      <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-3xl justify-around border-t border-slate-200 bg-white py-2 dark:border-zinc-700 dark:bg-zinc-800">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}

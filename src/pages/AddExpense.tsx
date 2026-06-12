@@ -13,7 +13,7 @@ import { toMajor, toMinor } from '../lib/money'
 import { SplitEditor } from '../components/SplitEditor'
 import type { AmountMap, SplitMode } from '../types'
 
-const CATEGORIES = [
+const BUILTIN_CATEGORIES = [
   'general',
   'groceries',
   'rent',
@@ -27,7 +27,7 @@ const CATEGORIES = [
 ]
 
 const INPUT =
-  'rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800'
+  'rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800'
 
 export function AddExpense() {
   const { groupId, expenseId } = useParams()
@@ -85,6 +85,14 @@ export function AddExpense() {
 
   const amount = toMinor(amountStr || '0', currency)
   const participants = useMemo(() => [...selected], [selected])
+  // Built-in categories plus any already used in this group (free-text new ones persist).
+  const categoryOptions = useMemo(
+    () =>
+      [...new Set([...BUILTIN_CATEGORIES, ...expenses.map((e) => e.category)])]
+        .filter(Boolean)
+        .sort(),
+    [expenses],
+  )
   const nameOf = (uid: string) =>
     group?.members[uid]?.displayName ?? (uid === user?.uid ? 'You' : uid.slice(0, 6))
 
@@ -98,6 +106,7 @@ export function AddExpense() {
     setBusy(true)
     try {
       const date = Date.parse(dateStr)
+      const cat = category.trim().toLowerCase() || 'general'
       const paidBy: AmountMap = { [payer]: amount }
       const participantUids = Array.from(
         new Set([...Object.keys(paidBy), ...Object.keys(splits)]),
@@ -107,7 +116,7 @@ export function AddExpense() {
           description: description.trim(),
           amount,
           currency,
-          category,
+          category: cat,
           date,
           splitMode,
           paidBy,
@@ -125,7 +134,7 @@ export function AddExpense() {
             dayOfMonth: new Date(date).getUTCDate(),
             startDate: date,
             currency,
-            category,
+            category: cat,
             paidBy,
             splits,
           },
@@ -137,7 +146,7 @@ export function AddExpense() {
           amount,
           currency,
           fxRate: 1,
-          category,
+          category: cat,
           date,
           splitMode,
           paidBy,
@@ -203,7 +212,7 @@ export function AddExpense() {
           value={amountStr}
           onChange={(e) => setAmountStr(e.target.value)}
           placeholder="0.00"
-          className={`flex-1 ${INPUT}`}
+          className={`min-w-0 flex-1 ${INPUT}`}
         />
         <select
           value={currency}
@@ -221,22 +230,23 @@ export function AddExpense() {
       </div>
 
       <div className="flex gap-2">
-        <select
+        <input
+          list="category-options"
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className={`flex-1 capitalize ${INPUT}`}
-        >
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
+          placeholder="Category"
+          className={`min-w-0 flex-1 capitalize ${INPUT}`}
+        />
+        <datalist id="category-options">
+          {categoryOptions.map((c) => (
+            <option key={c} value={c} />
           ))}
-        </select>
+        </datalist>
         <input
           type="date"
           value={dateStr}
           onChange={(e) => setDateStr(e.target.value)}
-          className={INPUT}
+          className={`min-w-0 flex-1 ${INPUT}`}
         />
       </div>
 
@@ -256,7 +266,7 @@ export function AddExpense() {
       </label>
 
       <div>
-        <div className="mb-1 text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <div className="mb-1 text-sm font-semibold text-slate-500 dark:text-zinc-400">
           Split between
         </div>
         <div className="flex flex-wrap gap-2">
@@ -268,7 +278,7 @@ export function AddExpense() {
               className={
                 selected.has(m)
                   ? 'rounded-full bg-emerald-600 px-3 py-1 text-sm text-white'
-                  : 'rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500 dark:border-slate-600 dark:text-slate-400'
+                  : 'rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500 dark:border-zinc-600 dark:text-zinc-400'
               }
             >
               {nameOf(m)}
@@ -295,7 +305,7 @@ export function AddExpense() {
 
       {!editing && (
         <>
-          <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800">
+          <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800">
             <input
               type="checkbox"
               checked={installments}
@@ -307,7 +317,7 @@ export function AddExpense() {
                 type="number"
                 value={count}
                 onChange={(e) => setCount(e.target.value)}
-                className="ml-auto w-16 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-slate-600 dark:bg-slate-900"
+                className="ml-auto w-16 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-zinc-600 dark:bg-zinc-900"
               />
             )}
           </label>

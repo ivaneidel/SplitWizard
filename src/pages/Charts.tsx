@@ -30,6 +30,7 @@ export function Charts() {
   const budgets = useBudgets()
   const currencies = currenciesIn(expenses)
   const [currency, setCurrency] = useState('')
+  const [trendYear, setTrendYear] = useState('all')
   const cur = currency || currencies[0] || 'ARS'
   const thisMonth = monthKey(Date.now())
 
@@ -46,7 +47,12 @@ export function Charts() {
     name: capitalize(name),
     value: toMajor(value, cur),
   }))
-  const barData = byMonth.map((m) => ({ month: m.month, value: toMajor(m.total, cur) }))
+  const trendYears = [...new Set(byMonth.map((m) => m.month.slice(0, 4)))].sort(
+    (a, b) => b.localeCompare(a),
+  )
+  const barData = byMonth
+    .filter((m) => trendYear === 'all' || m.month.startsWith(trendYear))
+    .map((m) => ({ month: m.month, value: toMajor(m.total, cur) }))
 
   return (
     <div className="space-y-6">
@@ -56,7 +62,7 @@ export function Charts() {
           <select
             value={cur}
             onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-lg border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
+            className="rounded-lg border border-slate-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
             {currencies.map((c) => (
               <option key={c} value={c}>
@@ -68,7 +74,7 @@ export function Charts() {
       </div>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-zinc-400">
           This month by category ({cur})
         </h2>
         {pieData.length === 0 ? (
@@ -88,9 +94,23 @@ export function Charts() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
-          Monthly trend ({cur})
-        </h2>
+        <div className="mb-2 flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
+            Monthly trend ({cur})
+          </h2>
+          <select
+            value={trendYear}
+            onChange={(e) => setTrendYear(e.target.value)}
+            className="rounded-lg border border-slate-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800"
+          >
+            <option value="all">All time</option>
+            {trendYears.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
         {barData.length === 0 ? (
           <p className="text-slate-400">No data.</p>
         ) : (
@@ -105,7 +125,7 @@ export function Charts() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
           Budgets ({cur}, this month)
         </h2>
         {Object.keys(byCategory).length === 0 && (
@@ -120,7 +140,7 @@ export function Charts() {
           return (
             <div
               key={cat}
-              className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800"
+              className="rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800"
             >
               <div className="flex items-center justify-between text-sm">
                 <span className="capitalize">{cat}</span>
@@ -128,7 +148,7 @@ export function Charts() {
                   className={
                     over
                       ? 'font-medium text-red-600'
-                      : 'text-slate-500 dark:text-slate-400'
+                      : 'text-slate-500 dark:text-zinc-400'
                   }
                 >
                   {formatMoney(spent, cur)}
@@ -136,7 +156,7 @@ export function Charts() {
                 </span>
               </div>
               {cap > 0 && (
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
                   <div
                     className={over ? 'h-full bg-red-500' : 'h-full bg-emerald-500'}
                     style={{ width: `${pct}%` }}
@@ -153,7 +173,7 @@ export function Charts() {
                     if (user && v)
                       void setBudget(user.uid, cat, toMinor(v, cur), cur)
                   }}
-                  className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900"
+                  className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-900"
                 />
                 {cap > 0 && user && (
                   <button

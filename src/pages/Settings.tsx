@@ -10,7 +10,7 @@ const THEMES: { key: Theme; label: string }[] = [
   { key: 'dark', label: 'Dark' },
 ]
 const CARD =
-  'rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800'
+  'rounded-lg border border-slate-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800'
 
 export function Settings() {
   const { user, profile, signOut, patchProfile } = useAuth()
@@ -29,7 +29,7 @@ export function Settings() {
       {profile && (
         <div className={CARD}>
           <div className="font-medium">{profile.displayName}</div>
-          <div className="text-sm text-slate-500 dark:text-slate-400">
+          <div className="text-sm text-slate-500 dark:text-zinc-400">
             {profile.email}
           </div>
         </div>
@@ -37,10 +37,10 @@ export function Settings() {
 
       {/* Theme */}
       <div className="space-y-2">
-        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
           Appearance
         </h2>
-        <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-700">
+        <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-zinc-700">
           {THEMES.map((t) => (
             <button
               key={t.key}
@@ -49,8 +49,8 @@ export function Settings() {
               className={cn(
                 'flex-1 rounded-md py-1.5 text-sm font-medium',
                 theme === t.key
-                  ? 'bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400'
-                  : 'text-slate-500 dark:text-slate-400',
+                  ? 'bg-white text-emerald-700 shadow-sm dark:bg-zinc-800 dark:text-emerald-400'
+                  : 'text-slate-500 dark:text-zinc-400',
               )}
             >
               {t.label}
@@ -62,13 +62,13 @@ export function Settings() {
       {/* Default currency */}
       {profile && (
         <div className="space-y-2">
-          <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
             Default currency
           </h2>
           <select
             value={profile.defaultCurrency}
             onChange={(e) => changeCurrency(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800"
           >
             {CURRENCIES.map((c) => (
               <option key={c} value={c}>

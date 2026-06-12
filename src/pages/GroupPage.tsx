@@ -5,7 +5,9 @@ import { useGroups, useGroupData } from '../hooks/useGroups'
 import { useAuth } from '../hooks/useAuth'
 import { simplifyDebts, type NetMap } from '../lib/balances'
 import { formatMoney } from '../lib/money'
+import { formatDate, monthYearLabel } from '../lib/date'
 import { SettleUpDialog } from '../components/SettleUpDialog'
+import type { Expense } from '../types'
 
 export function GroupPage() {
   const { groupId } = useParams()
@@ -24,6 +26,14 @@ export function GroupPage() {
   }
 
   const visibleExpenses = expenses.filter((e) => !e.deleted)
+  // Group the (already date-desc) list into month sections.
+  const monthGroups: { label: string; items: Expense[] }[] = []
+  for (const e of visibleExpenses) {
+    const label = monthYearLabel(e.date)
+    const last = monthGroups[monthGroups.length - 1]
+    if (last && last.label === label) last.items.push(e)
+    else monthGroups.push({ label, items: [e] })
+  }
 
   return (
     <div className="space-y-5">
@@ -73,35 +83,61 @@ export function GroupPage() {
         </button>
       </div>
 
-      {/* Expense list */}
-      <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+      {/* Expense list, grouped by month */}
+      <section className="space-y-4">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
           Expenses
         </h2>
         {visibleExpenses.length === 0 && (
           <p className="text-slate-400">No expenses yet.</p>
         )}
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
-          {visibleExpenses.map((e) => (
-            <li key={e.id}>
-              <Link
-                to={`/groups/${group.id}/expenses/${e.id}/edit`}
-                className="flex items-center justify-between p-3 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
-              >
-                <div>
-                  <div className="font-medium">{e.description}</div>
-                  <div className="text-xs text-slate-400">
-                    {new Date(e.date).toLocaleDateString()} · paid by{' '}
-                    {Object.keys(e.paidBy).map(nameOf).join(', ')}
-                  </div>
-                </div>
-                <div className="font-medium">
-                  {formatMoney(e.amount, e.currency)}
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
+        {monthGroups.map((grp) => (
+          <div key={grp.label} className="space-y-1">
+            <div className="px-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              {grp.label}
+            </div>
+            <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-zinc-700 dark:border-zinc-700 dark:bg-zinc-800">
+              {grp.items.map((e) => {
+                const net =
+                  (e.paidBy[user?.uid ?? ''] ?? 0) - (e.splits[user?.uid ?? ''] ?? 0)
+                return (
+                  <li key={e.id}>
+                    <Link
+                      to={`/groups/${group.id}/expenses/${e.id}/edit`}
+                      className="flex items-center justify-between p-3 transition hover:bg-slate-50 dark:hover:bg-zinc-700/50"
+                    >
+                      <div>
+                        <div className="font-medium">{e.description}</div>
+                        <div className="text-xs text-slate-400">
+                          {formatDate(e.date)} · paid by{' '}
+                          {Object.keys(e.paidBy).map(nameOf).join(', ')}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-medium">
+                          {formatMoney(e.amount, e.currency)}
+                        </div>
+                        {net !== 0 && (
+                          <div
+                            className={
+                              net > 0
+                                ? 'text-xs text-emerald-400 dark:text-emerald-300'
+                                : 'text-xs text-rose-400 dark:text-rose-300'
+                            }
+                          >
+                            {net > 0
+                              ? `you lent ${formatMoney(net, e.currency)}`
+                              : `lent to you ${formatMoney(-net, e.currency)}`}
+                          </div>
+                        )}
+                      </div>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </section>
 
       <SettleUpDialog
@@ -130,8 +166,8 @@ function CurrencyBalanceCard({
   const rawNets = Object.entries(net).filter(([, v]) => v !== 0)
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
-      <div className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+      <div className="mb-2 text-sm font-semibold text-slate-500 dark:text-zinc-400">
         {currency}
       </div>
       {debts.length === 0 ? (

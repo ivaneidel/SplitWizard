@@ -1,28 +1,55 @@
 import * as XLSX from 'xlsx'
 import type { AmountMap, CurrencyCode } from '../types'
 import { decimalsFor, formatMoney, toMajor, toMinor } from './money'
+import { formatDate } from './date'
 
-// Splitwise export layout: fixed columns then one column per person, whose value
-// is that person's NET for the row (what they paid minus what they owed).
+// Splitwise export layout: the first 5 columns are always
+// date, description, category, cost, currency (localized in the user's language),
+// followed by one column per person whose value is that person's NET for the row
+// (what they paid minus what they owed).
 const FIXED = ['Date', 'Description', 'Category', 'Cost', 'Currency']
+
+export interface ResolvedColumns {
+  date: string
+  description: string
+  category: string
+  cost: string
+  currency: string
+}
 
 export interface ParsedSheet {
   rows: Record<string, string>[]
-  /** Column headers that look like people (everything past the fixed columns). */
+  /** Column headers that are people (everything past the first 5 fixed columns). */
   personColumns: string[]
+  /** The actual header strings for the fixed columns (works in any language). */
+  cols: ResolvedColumns
 }
 
-/** Parse an .xlsx/.csv ArrayBuffer into rows + detected person columns. */
-export function parseWorkbook(data: ArrayBuffer): ParsedSheet {
-  const wb = XLSX.read(data, { type: 'array' })
+/**
+ * Parse a CSV string or .xlsx ArrayBuffer into rows, person columns, and the
+ * resolved fixed-column headers. Pass CSV as a UTF-8 string (read via
+ * `file.text()`) so accented headers/values aren't mangled.
+ */
+export function parseWorkbook(data: ArrayBuffer | string): ParsedSheet {
+  const wb =
+    typeof data === 'string'
+      ? XLSX.read(data, { type: 'string' })
+      : XLSX.read(data, { type: 'array' })
   const sheet = wb.Sheets[wb.SheetNames[0]]
   const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet, {
     defval: '',
     raw: false,
   })
   const headers = rows.length ? Object.keys(rows[0]) : []
-  const personColumns = headers.filter((h) => !FIXED.includes(h))
-  return { rows, personColumns }
+  const cols: ResolvedColumns = {
+    date: headers[0] ?? FIXED[0],
+    description: headers[1] ?? FIXED[1],
+    category: headers[2] ?? FIXED[2],
+    cost: headers[3] ?? FIXED[3],
+    currency: headers[4] ?? FIXED[4],
+  }
+  const personColumns = headers.slice(5)
+  return { rows, personColumns, cols }
 }
 
 export interface ImportedExpense {
@@ -53,13 +80,15 @@ export function reconstructExpenses(
   fallbackCurrency: CurrencyCode = 'USD',
 ): ImportedExpense[] {
   const out: ImportedExpense[] = []
+  const { cols } = parsed
 
   for (const row of parsed.rows) {
-    const description = (row['Description'] ?? '').trim()
-    if (!description || /total balance/i.test(description)) continue
+    const description = (row[cols.description] ?? '').trim()
+    // Skip the trailing totals row (English "Total balance" / Spanish "Saldo total" / …).
+    if (!description || /total balance|saldo total/i.test(description)) continue
 
-    const currency = (row['Currency'] || fallbackCurrency).trim().toUpperCase()
-    const cost = toMinor(row['Cost'] || '0', currency)
+    const currency = (row[cols.currency] || fallbackCurrency).trim().toUpperCase()
+    const cost = toMinor(row[cols.cost] || '0', currency)
     if (cost <= 0) continue
 
     // Per-person nets in minor units.
@@ -83,9 +112,9 @@ export function reconstructExpenses(
     }
 
     out.push({
-      date: parseDate(row['Date']),
+      date: parseDate(row[cols.date]),
       description,
-      category: (row['Category'] || 'general').toLowerCase(),
+      category: (row[cols.category] || 'general').trim().toLowerCase(),
       amount: cost,
       currency,
       paidBy,
@@ -146,8 +175,5 @@ export function buildExportBlob(
 
 /** Human-readable summary for a parsed import preview. */
 export function previewLine(e: ImportedExpense): string {
-  return `${new Date(e.date).toLocaleDateString()} · ${e.description} · ${formatMoney(
-    e.amount,
-    e.currency,
-  )}`
+  return `${formatDate(e.date)} · ${e.description} · ${formatMoney(e.amount, e.currency)}`
 }

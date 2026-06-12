@@ -4,6 +4,7 @@ import { Search as SearchIcon } from 'lucide-react'
 import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useGroups } from '../hooks/useGroups'
 import { formatMoney, toMajor } from '../lib/money'
+import { formatDate } from '../lib/date'
 import type { Expense } from '../types'
 
 /** Match by description substring, or by amount when the query is numeric. */
@@ -21,7 +22,7 @@ function matchesText(e: Expense, q: string): boolean {
 }
 
 const INPUT =
-  'rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800'
+  'rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800'
 
 export function Search() {
   const { expenses } = useAllExpenses()
@@ -55,7 +56,7 @@ export function Search() {
     <div className="space-y-4">
       <h1 className="text-xl font-bold">Search all over</h1>
 
-      <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 dark:border-slate-600 dark:bg-slate-800">
+      <div className="flex items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 dark:border-zinc-600 dark:bg-zinc-800">
         <SearchIcon size={18} className="text-slate-400" />
         <input
           autoFocus
@@ -93,17 +94,17 @@ export function Search() {
         </p>
       )}
 
-      <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
+      <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-zinc-700 dark:border-zinc-700 dark:bg-zinc-800">
         {results.map((e) => (
           <li key={e.id}>
             <Link
               to={`/groups/${e.groupId}/expenses/${e.id}/edit`}
-              className="flex items-center justify-between p-3 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              className="flex items-center justify-between p-3 transition hover:bg-slate-50 dark:hover:bg-zinc-700/50"
             >
               <div>
                 <div className="font-medium">{e.description}</div>
                 <div className="text-xs text-slate-400">
-                  {new Date(e.date).toLocaleDateString()} · {groupName(e.groupId)} ·{' '}
+                  {formatDate(e.date)} · {groupName(e.groupId)} ·{' '}
                   <span className="capitalize">{e.category}</span>
                 </div>
               </div>

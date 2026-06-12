@@ -11,7 +11,8 @@ import {
   type ImportedExpense,
   type ParsedSheet,
 } from '../lib/excel'
-import { bulkAddExpenses } from '../lib/firestore'
+import { importExpenses } from '../lib/firestore'
+import { detectInstallmentPlans } from '../lib/installmentDetect'
 
 export function ImportExport() {
   const { groups } = useGroups()
@@ -22,6 +23,7 @@ export function ImportExport() {
 
   const [parsed, setParsed] = useState<ParsedSheet | null>(null)
   const [mapping, setMapping] = useState<Record<string, string>>({})
+  const [detect, setDetect] = useState(true)
   const [busy, setBusy] = useState(false)
   const [done, setDone] = useState('')
 
@@ -30,10 +32,20 @@ export function ImportExport() {
     return reconstructExpenses(parsed, mapping, group.defaultCurrency)
   }, [parsed, mapping, group])
 
+  const detection = useMemo(
+    () =>
+      detect
+        ? detectInstallmentPlans(preview)
+        : { plans: [], singles: preview },
+    [detect, preview],
+  )
+
   const onFile = async (file: File) => {
     setDone('')
-    const buf = await file.arrayBuffer()
-    const p = parseWorkbook(buf)
+    // Read CSV as UTF-8 text (so accents survive); .xlsx as a binary buffer.
+    const isCsv = /\.csv$/i.test(file.name)
+    const data = isCsv ? await file.text() : await file.arrayBuffer()
+    const p = parseWorkbook(data)
     setParsed(p)
     // Auto-map columns whose name matches a member's display name.
     if (group) {
@@ -53,23 +65,16 @@ export function ImportExport() {
     if (!group || preview.length === 0) return
     setBusy(true)
     try {
-      const n = await bulkAddExpenses(
+      const n = await importExpenses(
         group.id,
-        preview.map((e) => ({
-          description: e.description,
-          amount: e.amount,
-          currency: e.currency,
-          fxRate: 1,
-          category: e.category,
-          date: e.date,
-          splitMode: 'exact' as const,
-          paidBy: e.paidBy,
-          splits: e.splits,
-          participantUids: e.participantUids,
-          createdBy: user!.uid,
-        })),
+        detection.plans,
+        detection.singles,
+        user!.uid,
       )
-      setDone(`Imported ${n} expenses into ${group.name}.`)
+      const planNote = detection.plans.length
+        ? ` (${detection.plans.length} installment plan${detection.plans.length > 1 ? 's' : ''})`
+        : ''
+      setDone(`Imported ${n} expenses into ${group.name}${planNote}.`)
       setParsed(null)
       setMapping({})
     } finally {
@@ -112,7 +117,7 @@ export function ImportExport() {
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800"
         >
           <option value="">Select a group…</option>
           {groups.map((g) => (
@@ -129,13 +134,13 @@ export function ImportExport() {
           <button
             type="button"
             onClick={doExport}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-medium dark:border-slate-600"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-medium dark:border-zinc-600"
           >
             <Download size={16} /> Export {group.name} to Excel
           </button>
 
           {/* Import */}
-          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
             <div className="flex items-center gap-2 font-medium">
               <Upload size={16} /> Import a Splitwise export
             </div>
@@ -163,7 +168,7 @@ export function ImportExport() {
                         onChange={(e) =>
                           setMapping((m) => ({ ...m, [col]: e.target.value }))
                         }
-                        className="flex-1 rounded-md border border-slate-300 px-2 py-1 dark:border-slate-600 dark:bg-slate-900"
+                        className="flex-1 rounded-md border border-slate-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900"
                       >
                         <option value="">(skip)</option>
                         {group.memberUids.map((u) => (
@@ -176,8 +181,27 @@ export function ImportExport() {
                   ))}
                 </ul>
 
-                <div className="max-h-48 overflow-y-auto rounded-md bg-slate-50 p-2 text-xs dark:bg-slate-900">
-                  <div className="mb-1 font-medium text-slate-500 dark:text-slate-400">
+                <label className="flex items-center gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={detect}
+                    onChange={(e) => setDetect(e.target.checked)}
+                  />
+                  Detect installment plans
+                </label>
+                {detect && detection.plans.length > 0 && (
+                  <p className="text-xs text-emerald-600">
+                    Detected {detection.plans.length} installment plan
+                    {detection.plans.length > 1 ? 's' : ''} (
+                    {detection.plans
+                      .map((p) => `${p.baseDescription} ×${p.count}`)
+                      .join(', ')}
+                    )
+                  </p>
+                )}
+
+                <div className="max-h-48 overflow-y-auto rounded-md bg-slate-50 p-2 text-xs dark:bg-zinc-900">
+                  <div className="mb-1 font-medium text-slate-500 dark:text-zinc-400">
                     Preview ({preview.length})
                   </div>
                   {preview.slice(0, 50).map((e, i) => (

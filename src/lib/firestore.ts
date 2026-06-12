@@ -24,6 +24,9 @@ import type {
   Settlement,
 } from '../types'
 import { generateInstallments, type InstallmentConfig } from './installments'
+import { remapKey, remapList } from './claim'
+import type { ImportedExpense } from './excel'
+import type { DetectedPlan } from './installmentDetect'
 
 const now = () => Date.now()
 
@@ -98,6 +101,75 @@ export async function leaveGroup(group: Group, uid: string) {
   await removeMember(group, uid)
 }
 
+/**
+ * Link a guest (placeholder) member to a real account: rewrite the guest's
+ * `local_*` id to the real uid across every expense (paidBy/splits/participants)
+ * and settlement (from/to) in the group, then swap the member entry. Balances
+ * are unchanged. Chunked so it scales past the 500-write batch limit.
+ */
+export async function claimGuest(
+  group: Group,
+  guestId: string,
+  realUid: string,
+  realMember: { displayName: string; photoURL?: string },
+) {
+  const [expenses, settlements] = await Promise.all([
+    getDocs(expensesCol(group.id)),
+    getDocs(settlementsCol(group.id)),
+  ])
+
+  const updates: { ref: ReturnType<typeof doc>; data: DocumentData }[] = []
+
+  expenses.forEach((d) => {
+    const e = d.data() as Expense
+    const paidBy = e.paidBy ?? {}
+    const splits = e.splits ?? {}
+    const parts = e.participantUids ?? []
+    if (guestId in paidBy || guestId in splits || parts.includes(guestId)) {
+      updates.push({
+        ref: d.ref,
+        data: {
+          paidBy: remapKey(paidBy, guestId, realUid),
+          splits: remapKey(splits, guestId, realUid),
+          participantUids: remapList(parts, guestId, realUid),
+        },
+      })
+    }
+  })
+
+  settlements.forEach((d) => {
+    const s = d.data() as Settlement
+    if (s.from === guestId || s.to === guestId) {
+      updates.push({
+        ref: d.ref,
+        data: {
+          from: s.from === guestId ? realUid : s.from,
+          to: s.to === guestId ? realUid : s.to,
+        },
+      })
+    }
+  })
+
+  const members = { ...group.members }
+  delete members[guestId]
+  members[realUid] = {
+    displayName: realMember.displayName,
+    photoURL: realMember.photoURL,
+    role: members[realUid]?.role ?? 'member',
+  }
+  updates.push({
+    ref: doc(db, 'groups', group.id),
+    data: { members, memberUids: remapList(group.memberUids, guestId, realUid) },
+  })
+
+  const CHUNK = 400
+  for (let i = 0; i < updates.length; i += CHUNK) {
+    const batch = writeBatch(db)
+    for (const u of updates.slice(i, i + CHUNK)) batch.update(u.ref, u.data)
+    await batch.commit()
+  }
+}
+
 /** Owner-only: delete a group and every doc that belongs to it (cascade). */
 export async function deleteGroup(id: string) {
   const [expenses, settlements, plans] = await Promise.all([
@@ -159,6 +231,90 @@ export function watchGroupExpenses(
 ): () => void {
   const q = query(expensesCol(groupId), orderBy('date', 'desc'))
   return onSnapshot(q, (snap) => cb(snap.docs.map(expenseFrom)))
+}
+
+/**
+ * Import expenses, materializing detected installment plans as
+ * `installmentPlans` docs with linked, pre-dated expense rows, and writing the
+ * rest as standalone expenses. All in chunked batches. Returns expense count.
+ */
+export async function importExpenses(
+  groupId: string,
+  plans: DetectedPlan[],
+  singles: ImportedExpense[],
+  createdBy: string,
+): Promise<number> {
+  const ops: { ref: ReturnType<typeof doc>; data: DocumentData }[] = []
+  let count = 0
+
+  const expenseDoc = (
+    e: ImportedExpense,
+    extra: Partial<Expense> = {},
+  ): DocumentData => ({
+    groupId,
+    description: e.description,
+    amount: e.amount,
+    currency: e.currency,
+    fxRate: 1,
+    category: e.category,
+    date: e.date,
+    splitMode: 'exact',
+    paidBy: e.paidBy,
+    splits: e.splits,
+    participantUids: e.participantUids,
+    createdBy,
+    createdAt: now(),
+    updatedAt: now(),
+    ...extra,
+  })
+
+  for (const plan of plans) {
+    const planRef = doc(collection(db, 'installmentPlans'))
+    const earliest = plan.rows.reduce((min, r) => Math.min(min, r.date), Infinity)
+    const total = plan.rows.reduce((s, r) => s + r.amount, 0)
+    const template = plan.rows[0]
+    ops.push({
+      ref: planRef,
+      data: {
+        groupId,
+        baseDescription: plan.baseDescription,
+        totalAmount: total,
+        count: plan.count,
+        dayOfMonth: new Date(earliest).getUTCDate(),
+        startDate: earliest,
+        openEnded: false,
+        currency: plan.currency,
+        category: plan.category,
+        paidBy: template.paidBy,
+        splits: template.splits,
+        createdBy,
+        createdAt: now(),
+      },
+    })
+    for (const r of plan.rows) {
+      ops.push({
+        ref: doc(expensesCol(groupId)),
+        data: expenseDoc(r, {
+          installmentPlanId: planRef.id,
+          installmentIndex: r.installmentIndex,
+        }),
+      })
+      count++
+    }
+  }
+
+  for (const s of singles) {
+    ops.push({ ref: doc(expensesCol(groupId)), data: expenseDoc(s) })
+    count++
+  }
+
+  const CHUNK = 400
+  for (let i = 0; i < ops.length; i += CHUNK) {
+    const batch = writeBatch(db)
+    for (const o of ops.slice(i, i + CHUNK)) batch.set(o.ref, o.data)
+    await batch.commit()
+  }
+  return count
 }
 
 /** Write many expenses in chunked batches (Firestore caps a batch at 500). */

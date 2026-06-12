@@ -52,11 +52,11 @@ export function SettleUpDialog({
   return (
     <Modal open={open} onClose={onClose} title="Settle up">
       <div className="space-y-3">
-        <div className="flex items-center gap-2">
+        <div className="space-y-1">
           <select
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900"
           >
             {members.map((m) => (
               <option key={m} value={m}>
@@ -64,11 +64,11 @@ export function SettleUpDialog({
               </option>
             ))}
           </select>
-          <span className="text-slate-400">pays</span>
+          <div className="text-center text-xs text-slate-400">pays</div>
           <select
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900"
           >
             {members.map((m) => (
               <option key={m} value={m}>
@@ -84,12 +84,12 @@ export function SettleUpDialog({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900"
           />
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
+            className="rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-900"
           >
             {(currencies.length ? currencies : [group.defaultCurrency]).map((c) => (
               <option key={c} value={c}>

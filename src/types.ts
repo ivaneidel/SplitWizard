@@ -29,6 +29,8 @@ export interface GroupMember {
   displayName: string
   photoURL?: string
   role: 'owner' | 'member'
+  /** A non-app participant (guest) — no account; id is a `local_*` string. */
+  placeholder?: boolean
 }
 
 export interface Group {
