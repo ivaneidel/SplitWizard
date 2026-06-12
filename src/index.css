@@ -1,8 +1,7 @@
 @import 'tailwindcss';
 
-:root {
-  color-scheme: light;
-}
+/* Make `dark:` respond to a `.dark` class on <html> (manual + system toggle). */
+@custom-variant dark (&:where(.dark, .dark *));
 
 html,
 body,
@@ -16,4 +15,9 @@ body {
   -webkit-font-smoothing: antialiased;
   background: #f7f8fa;
   color: #1f2430;
+}
+
+html.dark body {
+  background: #0f1729;
+  color: #e2e8f0;
 }

@@ -5,6 +5,7 @@ import { AppLayout } from './components/AppLayout'
 import { Login } from './pages/Login'
 import { Dashboard } from './pages/Dashboard'
 import { GroupPage } from './pages/GroupPage'
+import { GroupSettings } from './pages/GroupSettings'
 import { AddExpense } from './pages/AddExpense'
 import { Installments } from './pages/Installments'
 import { Search } from './pages/Search'
@@ -33,7 +34,12 @@ export default function App() {
       >
         <Route path="/" element={<Dashboard />} />
         <Route path="/groups/:groupId" element={<GroupPage />} />
+        <Route path="/groups/:groupId/settings" element={<GroupSettings />} />
         <Route path="/groups/:groupId/add" element={<AddExpense />} />
+        <Route
+          path="/groups/:groupId/expenses/:expenseId/edit"
+          element={<AddExpense />}
+        />
         <Route path="/installments" element={<Installments />} />
         <Route path="/search" element={<Search />} />
         <Route

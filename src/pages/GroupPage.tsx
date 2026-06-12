@@ -1,14 +1,11 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Plus, UserPlus } from 'lucide-react'
+import { ArrowLeft, Plus, Settings } from 'lucide-react'
 import { useGroups, useGroupData } from '../hooks/useGroups'
 import { useAuth } from '../hooks/useAuth'
 import { simplifyDebts, type NetMap } from '../lib/balances'
 import { formatMoney } from '../lib/money'
-import { addMemberByEmail } from '../lib/members'
-import { Modal } from '../components/Modal'
 import { SettleUpDialog } from '../components/SettleUpDialog'
-import type { Group } from '../types'
 
 export function GroupPage() {
   const { groupId } = useParams()
@@ -18,7 +15,6 @@ export function GroupPage() {
   const { user } = useAuth()
 
   const [showSettle, setShowSettle] = useState(false)
-  const [showAddMember, setShowAddMember] = useState(false)
 
   const nameOf = (uid: string) =>
     group?.members[uid]?.displayName ?? (uid === user?.uid ? 'You' : uid.slice(0, 6))
@@ -36,14 +32,13 @@ export function GroupPage() {
           <ArrowLeft size={20} />
         </Link>
         <h1 className="flex-1 text-xl font-bold">{group.name}</h1>
-        <button
-          type="button"
-          onClick={() => setShowAddMember(true)}
+        <Link
+          to={`/groups/${group.id}/settings`}
           className="text-slate-400"
-          title="Add member"
+          title="Group settings"
         >
-          <UserPlus size={20} />
-        </button>
+          <Settings size={20} />
+        </Link>
       </div>
 
       {/* Balances */}
@@ -72,7 +67,7 @@ export function GroupPage() {
         <button
           type="button"
           onClick={() => setShowSettle(true)}
-          className="flex-1 rounded-lg border border-emerald-600 py-2 font-medium text-emerald-700"
+          className="flex-1 rounded-lg border border-emerald-600 py-2 font-medium text-emerald-700 dark:text-emerald-400"
         >
           Settle up
         </button>
@@ -80,23 +75,30 @@ export function GroupPage() {
 
       {/* Expense list */}
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-slate-500">Expenses</h2>
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
+          Expenses
+        </h2>
         {visibleExpenses.length === 0 && (
           <p className="text-slate-400">No expenses yet.</p>
         )}
-        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-slate-700 dark:border-slate-700 dark:bg-slate-800">
           {visibleExpenses.map((e) => (
-            <li key={e.id} className="flex items-center justify-between p-3">
-              <div>
-                <div className="font-medium">{e.description}</div>
-                <div className="text-xs text-slate-400">
-                  {new Date(e.date).toLocaleDateString()} · paid by{' '}
-                  {Object.keys(e.paidBy).map(nameOf).join(', ')}
+            <li key={e.id}>
+              <Link
+                to={`/groups/${group.id}/expenses/${e.id}/edit`}
+                className="flex items-center justify-between p-3 transition hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              >
+                <div>
+                  <div className="font-medium">{e.description}</div>
+                  <div className="text-xs text-slate-400">
+                    {new Date(e.date).toLocaleDateString()} · paid by{' '}
+                    {Object.keys(e.paidBy).map(nameOf).join(', ')}
+                  </div>
                 </div>
-              </div>
-              <div className="font-medium">
-                {formatMoney(e.amount, e.currency)}
-              </div>
+                <div className="font-medium">
+                  {formatMoney(e.amount, e.currency)}
+                </div>
+              </Link>
             </li>
           ))}
         </ul>
@@ -107,11 +109,6 @@ export function GroupPage() {
         onClose={() => setShowSettle(false)}
         group={group}
         balances={balances}
-      />
-      <AddMemberDialog
-        open={showAddMember}
-        onClose={() => setShowAddMember(false)}
-        group={group}
       />
     </div>
   )
@@ -133,8 +130,10 @@ function CurrencyBalanceCard({
   const rawNets = Object.entries(net).filter(([, v]) => v !== 0)
 
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4">
-      <div className="mb-2 text-sm font-semibold text-slate-500">{currency}</div>
+    <div className="rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
+      <div className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
+        {currency}
+      </div>
       {debts.length === 0 ? (
         <p className="text-slate-400">Settled up.</p>
       ) : simplify ? (
@@ -160,61 +159,5 @@ function CurrencyBalanceCard({
         </ul>
       )}
     </div>
-  )
-}
-
-function AddMemberDialog({
-  open,
-  onClose,
-  group,
-}: {
-  open: boolean
-  onClose: () => void
-  group: Group
-}) {
-  const [email, setEmail] = useState('')
-  const [error, setError] = useState('')
-  const [busy, setBusy] = useState(false)
-
-  const submit = async () => {
-    setError('')
-    setBusy(true)
-    try {
-      const ok = await addMemberByEmail(group, email)
-      if (!ok) {
-        setError('No user with that email has signed in yet.')
-        return
-      }
-      setEmail('')
-      onClose()
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return (
-    <Modal open={open} onClose={onClose} title="Add member">
-      <div className="space-y-3">
-        <p className="text-sm text-slate-500">
-          They must have signed into the app at least once.
-        </p>
-        <input
-          autoFocus
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="email@example.com"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-        {error && <p className="text-sm text-red-600">{error}</p>}
-        <button
-          type="button"
-          disabled={busy || !email.trim()}
-          onClick={() => void submit()}
-          className="w-full rounded-lg bg-emerald-600 py-2 font-medium text-white disabled:opacity-50"
-        >
-          Add
-        </button>
-      </div>
-    </Modal>
   )
 }

@@ -18,7 +18,7 @@ export function Modal({
       onClick={onClose}
     >
       <div
-        className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl"
+        className="w-full max-w-md rounded-t-2xl bg-white p-5 shadow-xl sm:rounded-2xl dark:bg-slate-800"
         onClick={(e) => e.stopPropagation()}
       >
         <h2 className="mb-4 text-lg font-bold">{title}</h2>

@@ -19,9 +19,10 @@ import {
 } from '../lib/analytics'
 import { monthKey } from '../lib/forecast'
 import { formatMoney, toMajor, toMinor } from '../lib/money'
-import { setBudget } from '../lib/firestore'
+import { deleteBudget, setBudget } from '../lib/firestore'
 
 const COLORS = ['#1cc29f', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
+const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function Charts() {
   const { expenses } = useAllExpenses()
@@ -42,7 +43,7 @@ export function Charts() {
   )
 
   const pieData = Object.entries(byCategory).map(([name, value]) => ({
-    name,
+    name: capitalize(name),
     value: toMajor(value, cur),
   }))
   const barData = byMonth.map((m) => ({ month: m.month, value: toMajor(m.total, cur) }))
@@ -55,7 +56,7 @@ export function Charts() {
           <select
             value={cur}
             onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-lg border border-slate-300 px-2 py-1 text-sm"
+            className="rounded-lg border border-slate-300 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-800"
           >
             {currencies.map((c) => (
               <option key={c} value={c}>
@@ -67,7 +68,7 @@ export function Charts() {
       </div>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500">
+        <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
           This month by category ({cur})
         </h2>
         {pieData.length === 0 ? (
@@ -87,7 +88,7 @@ export function Charts() {
       </section>
 
       <section>
-        <h2 className="mb-2 text-sm font-semibold text-slate-500">
+        <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-slate-400">
           Monthly trend ({cur})
         </h2>
         {barData.length === 0 ? (
@@ -104,7 +105,7 @@ export function Charts() {
       </section>
 
       <section className="space-y-2">
-        <h2 className="text-sm font-semibold text-slate-500">
+        <h2 className="text-sm font-semibold text-slate-500 dark:text-slate-400">
           Budgets ({cur}, this month)
         </h2>
         {Object.keys(byCategory).length === 0 && (
@@ -117,33 +118,54 @@ export function Charts() {
           const pct = cap > 0 ? Math.min(100, (spent / cap) * 100) : 0
           const over = cap > 0 && spent > cap
           return (
-            <div key={cat} className="rounded-lg border border-slate-200 bg-white p-3">
+            <div
+              key={cat}
+              className="rounded-lg border border-slate-200 bg-white p-3 dark:border-slate-700 dark:bg-slate-800"
+            >
               <div className="flex items-center justify-between text-sm">
                 <span className="capitalize">{cat}</span>
-                <span className={over ? 'font-medium text-red-600' : 'text-slate-500'}>
+                <span
+                  className={
+                    over
+                      ? 'font-medium text-red-600'
+                      : 'text-slate-500 dark:text-slate-400'
+                  }
+                >
                   {formatMoney(spent, cur)}
                   {cap > 0 && ` / ${formatMoney(cap, cur)}`}
                 </span>
               </div>
               {cap > 0 && (
-                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-slate-700">
                   <div
                     className={over ? 'h-full bg-red-500' : 'h-full bg-emerald-500'}
                     style={{ width: `${pct}%` }}
                   />
                 </div>
               )}
-              <input
-                type="number"
-                placeholder="Set monthly cap…"
-                defaultValue={cap ? toMajor(cap, cur) : ''}
-                onBlur={(e) => {
-                  const v = e.target.value.trim()
-                  if (user && v)
-                    void setBudget(user.uid, cat, toMinor(v, cur), cur)
-                }}
-                className="mt-2 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
-              />
+              <div className="mt-2 flex items-center gap-2">
+                <input
+                  type="number"
+                  placeholder="Set monthly cap…"
+                  defaultValue={cap ? toMajor(cap, cur) : ''}
+                  onBlur={(e) => {
+                    const v = e.target.value.trim()
+                    if (user && v)
+                      void setBudget(user.uid, cat, toMinor(v, cur), cur)
+                  }}
+                  className="w-full rounded-md border border-slate-200 px-2 py-1 text-sm dark:border-slate-600 dark:bg-slate-900"
+                />
+                {cap > 0 && user && (
+                  <button
+                    type="button"
+                    onClick={() => void deleteBudget(user.uid, cat)}
+                    className="shrink-0 text-xs text-slate-400 hover:text-red-500"
+                    title="Remove cap"
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
             </div>
           )
         })}

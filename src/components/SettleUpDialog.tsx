@@ -56,7 +56,7 @@ export function SettleUpDialog({
           <select
             value={from}
             onChange={(e) => setFrom(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
           >
             {members.map((m) => (
               <option key={m} value={m}>
@@ -68,7 +68,7 @@ export function SettleUpDialog({
           <select
             value={to}
             onChange={(e) => setTo(e.target.value)}
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
           >
             {members.map((m) => (
               <option key={m} value={m}>
@@ -84,12 +84,12 @@ export function SettleUpDialog({
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
             placeholder="0.00"
-            className="flex-1 rounded-lg border border-slate-300 px-3 py-2"
+            className="flex-1 rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
           />
           <select
             value={currency}
             onChange={(e) => setCurrency(e.target.value)}
-            className="rounded-lg border border-slate-300 px-3 py-2"
+            className="rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-900"
           >
             {(currencies.length ? currencies : [group.defaultCurrency]).map((c) => (
               <option key={c} value={c}>

@@ -40,6 +40,8 @@ export interface Group {
   defaultCurrency: CurrencyCode
   /** Minimize number of transactions when displaying who-owes-whom. */
   simplifyDebts: boolean
+  /** Hidden from the main list when true. */
+  archived?: boolean
   createdBy: string
   createdAt: number
 }

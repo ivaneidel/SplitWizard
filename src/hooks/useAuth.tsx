@@ -21,6 +21,8 @@ interface AuthState {
   loading: boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
+  /** Patch the in-memory profile (after persisting changes to Firestore). */
+  patchProfile: (patch: Partial<UserProfile>) => void
 }
 
 const AuthContext = createContext<AuthState | undefined>(undefined)
@@ -62,9 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     await fbSignOut(auth)
   }
+  const patchProfile = (patch: Partial<UserProfile>) => {
+    setProfile((p) => (p ? { ...p, ...patch } : p))
+  }
 
   return (
-    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>
+    <AuthContext.Provider
+      value={{ user, profile, loading, signIn, signOut, patchProfile }}
+    >
       {children}
     </AuthContext.Provider>
   )

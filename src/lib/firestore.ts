@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   collectionGroup,
+  deleteDoc,
   doc,
   getDocs,
   onSnapshot,
@@ -41,6 +42,14 @@ export async function findUserByEmail(
   return { uid: d.id, displayName: data.displayName, photoURL: data.photoURL }
 }
 
+/** Patch the signed-in user's own profile doc. */
+export async function updateProfile(
+  uid: string,
+  patch: Partial<import('../types').UserProfile>,
+) {
+  await updateDoc(doc(db, 'users', uid), patch as DocumentData)
+}
+
 // --- Groups ---
 
 export async function createGroup(
@@ -68,6 +77,40 @@ export function watchUserGroups(
 
 export async function updateGroup(id: string, patch: Partial<Group>) {
   await updateDoc(doc(db, 'groups', id), patch as DocumentData)
+}
+
+export async function archiveGroup(id: string, archived: boolean) {
+  await updateGroup(id, { archived })
+}
+
+/** Drop a member (and their entry in the members map) from a group. */
+export async function removeMember(group: Group, uid: string) {
+  const members = { ...group.members }
+  delete members[uid]
+  await updateGroup(group.id, {
+    memberUids: group.memberUids.filter((u) => u !== uid),
+    members,
+  })
+}
+
+/** The signed-in user leaves a group. */
+export async function leaveGroup(group: Group, uid: string) {
+  await removeMember(group, uid)
+}
+
+/** Owner-only: delete a group and every doc that belongs to it (cascade). */
+export async function deleteGroup(id: string) {
+  const [expenses, settlements, plans] = await Promise.all([
+    getDocs(collection(db, 'groups', id, 'expenses')),
+    getDocs(collection(db, 'groups', id, 'settlements')),
+    getDocs(query(collection(db, 'installmentPlans'), where('groupId', '==', id))),
+  ])
+  const batch = writeBatch(db)
+  expenses.forEach((d) => batch.delete(d.ref))
+  settlements.forEach((d) => batch.delete(d.ref))
+  plans.forEach((d) => batch.delete(d.ref))
+  batch.delete(doc(db, 'groups', id))
+  await batch.commit()
 }
 
 // --- Expenses (subcollection of a group) ---
@@ -210,6 +253,10 @@ export async function setBudget(
     monthlyCap,
     currency,
   })
+}
+
+export async function deleteBudget(uid: string, category: string) {
+  await deleteDoc(doc(db, 'budgets', uid, 'categories', category))
 }
 
 // --- Installment plans (generate all rows upfront in one batch) ---

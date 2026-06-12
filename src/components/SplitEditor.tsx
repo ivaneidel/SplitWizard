@@ -17,16 +17,22 @@ export function SplitEditor({
   participants,
   nameOf,
   onChange,
+  initialMode = 'equal',
+  initialRaw,
 }: {
   amount: number // minor units
   currency: string
   participants: string[]
   nameOf: (uid: string) => string
   onChange: (splits: AmountMap, valid: boolean, mode: SplitMode) => void
+  /** Initial split mode (e.g. 'exact' when editing an existing expense). */
+  initialMode?: SplitMode
+  /** Initial per-uid raw input values (major units for exact mode). */
+  initialRaw?: Record<string, string>
 }) {
-  const [mode, setMode] = useState<SplitMode>('equal')
+  const [mode, setMode] = useState<SplitMode>(initialMode)
   // Raw text inputs per uid for exact/percent/shares.
-  const [raw, setRaw] = useState<Record<string, string>>({})
+  const [raw, setRaw] = useState<Record<string, string>>(initialRaw ?? {})
 
   const splits = useMemo<AmountMap>(() => {
     switch (mode) {
@@ -67,7 +73,7 @@ export function SplitEditor({
 
   return (
     <div className="space-y-3">
-      <div className="flex gap-1 rounded-lg bg-slate-100 p-1">
+      <div className="flex gap-1 rounded-lg bg-slate-100 p-1 dark:bg-slate-700">
         {MODES.map((m) => (
           <button
             key={m.key}
@@ -75,7 +81,9 @@ export function SplitEditor({
             onClick={() => setMode(m.key)}
             className={cn(
               'flex-1 rounded-md py-1.5 text-sm font-medium',
-              mode === m.key ? 'bg-white shadow-sm text-emerald-700' : 'text-slate-500',
+              mode === m.key
+                ? 'bg-white text-emerald-700 shadow-sm dark:bg-slate-800 dark:text-emerald-400'
+                : 'text-slate-500 dark:text-slate-400',
             )}
           >
             {m.label}
@@ -101,7 +109,7 @@ export function SplitEditor({
                     setRaw((r) => ({ ...r, [uid]: e.target.value }))
                   }
                   placeholder={mode === 'percent' ? '%' : mode === 'shares' ? '1' : '0'}
-                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm"
+                  className="w-24 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-slate-600 dark:bg-slate-800"
                 />
                 <span className="w-20 text-right text-xs text-slate-400">
                   {formatMoney(splits[uid] ?? 0, currency)}

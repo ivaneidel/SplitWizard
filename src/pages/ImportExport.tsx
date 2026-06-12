@@ -112,7 +112,7 @@ export function ImportExport() {
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
-          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2"
+          className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-slate-600 dark:bg-slate-800"
         >
           <option value="">Select a group…</option>
           {groups.map((g) => (
@@ -129,13 +129,13 @@ export function ImportExport() {
           <button
             type="button"
             onClick={doExport}
-            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-medium"
+            className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-medium dark:border-slate-600"
           >
             <Download size={16} /> Export {group.name} to Excel
           </button>
 
           {/* Import */}
-          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4">
+          <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-slate-700 dark:bg-slate-800">
             <div className="flex items-center gap-2 font-medium">
               <Upload size={16} /> Import a Splitwise export
             </div>
@@ -163,7 +163,7 @@ export function ImportExport() {
                         onChange={(e) =>
                           setMapping((m) => ({ ...m, [col]: e.target.value }))
                         }
-                        className="flex-1 rounded-md border border-slate-300 px-2 py-1"
+                        className="flex-1 rounded-md border border-slate-300 px-2 py-1 dark:border-slate-600 dark:bg-slate-900"
                       >
                         <option value="">(skip)</option>
                         {group.memberUids.map((u) => (
@@ -176,8 +176,8 @@ export function ImportExport() {
                   ))}
                 </ul>
 
-                <div className="max-h-48 overflow-y-auto rounded-md bg-slate-50 p-2 text-xs">
-                  <div className="mb-1 font-medium text-slate-500">
+                <div className="max-h-48 overflow-y-auto rounded-md bg-slate-50 p-2 text-xs dark:bg-slate-900">
+                  <div className="mb-1 font-medium text-slate-500 dark:text-slate-400">
                     Preview ({preview.length})
                   </div>
                   {preview.slice(0, 50).map((e, i) => (
