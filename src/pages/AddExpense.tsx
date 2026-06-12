@@ -11,6 +11,7 @@ import {
 } from "../lib/firestore";
 import { toMajor, toMinor } from "../lib/money";
 import { SplitEditor } from "../components/SplitEditor";
+import { Skeleton } from "../components/Skeleton";
 import type { AmountMap, SplitMode } from "../types";
 
 const BUILTIN_CATEGORIES = [
@@ -121,7 +122,17 @@ export function AddExpense() {
           You have no groups yet — create one first.
         </p>
       );
-    return <p className="text-slate-400">Loading…</p>;
+    return (
+      <div className="flex min-h-full flex-col justify-center">
+        <div className="mx-auto w-full max-w-md space-y-4">
+          <Skeleton className="mx-auto h-7 w-32" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="h-11 w-full" />
+          <Skeleton className="mx-auto h-9 w-48" />
+          <Skeleton className="h-12 w-full" />
+        </div>
+      </div>
+    );
   }
 
   const canSubmit =
@@ -308,7 +319,7 @@ export function AddExpense() {
                   onClick={() => toggleMember(m)}
                   className={
                     selected.has(m)
-                      ? "rounded-full bg-amber-600 px-3 py-1 text-sm text-white"
+                      ? "rounded-full bg-indigo-600 px-3 py-1 text-sm text-white"
                       : "rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500 dark:border-zinc-600 dark:text-zinc-400"
                   }
                 >
@@ -406,7 +417,7 @@ export function AddExpense() {
             type="button"
             disabled={!canSubmit}
             onClick={() => void submit()}
-            className="w-75 rounded-lg bg-amber-600 py-3 font-medium text-white disabled:opacity-50"
+            className="w-75 rounded-lg bg-indigo-600 py-3 font-medium text-white disabled:opacity-50"
           >
             {editing
               ? "Save changes"

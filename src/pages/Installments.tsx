@@ -27,7 +27,7 @@ function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
       </div>
       <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
         <div
-          className="h-full bg-amber-500"
+          className="h-full bg-indigo-500"
           style={{ width: `${(p.paid / p.total) * 100}%` }}
         />
       </div>
@@ -68,16 +68,16 @@ export function Installments() {
       )}
 
       {nextMonth && (
-        <div className="rounded-lg bg-amber-50 p-4 dark:bg-amber-950">
-          <div className="text-sm text-amber-700 dark:text-amber-400">
+        <div className="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-950">
+          <div className="text-sm text-indigo-700 dark:text-indigo-400">
             Due {monthLabel(nextMonth.month)}
           </div>
-          <div className="mt-1 space-x-2 text-lg font-bold text-amber-800 dark:text-amber-300">
+          <div className="mt-1 space-x-2 text-lg font-bold text-indigo-800 dark:text-indigo-300">
             {Object.entries(nextMonth.totalByCurrency).map(([cur, amt]) => (
               <span key={cur}>{formatMoney(amt, cur)}</span>
             ))}
           </div>
-          <div className="text-xs text-amber-600">
+          <div className="text-xs text-indigo-600">
             across {nextMonth.expenses.length} commitment
             {nextMonth.expenses.length > 1 ? 's' : ''}
           </div>

@@ -13,7 +13,7 @@ export function Login() {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-8 px-6">
       <div className="text-center">
-        <h1 className="text-3xl font-bold text-amber-600">SplitWizard</h1>
+        <h1 className="text-3xl font-bold text-indigo-600">SplitWizard</h1>
         <p className="mt-2 text-slate-500">
           Split expenses, auto-installments, import your history.
         </p>

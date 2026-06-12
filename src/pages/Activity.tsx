@@ -84,7 +84,7 @@ export function Activity() {
                   <span
                     className={
                       e.youNet > 0
-                        ? 'shrink-0 text-xs text-amber-400 dark:text-amber-300'
+                        ? 'shrink-0 text-xs text-indigo-400 dark:text-indigo-300'
                         : 'shrink-0 text-xs text-rose-400 dark:text-rose-300'
                     }
                   >

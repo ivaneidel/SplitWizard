@@ -51,7 +51,7 @@ export function Settings() {
               className={cn(
                 'flex-1 rounded-md py-1.5 text-sm font-medium',
                 theme === t.key
-                  ? 'bg-white text-amber-700 shadow-sm dark:bg-zinc-800 dark:text-amber-400'
+                  ? 'bg-white text-indigo-700 shadow-sm dark:bg-zinc-800 dark:text-indigo-400'
                   : 'text-slate-500 dark:text-zinc-400',
               )}
             >

@@ -51,10 +51,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    return onAuthStateChanged(auth, async (u) => {
+    return onAuthStateChanged(auth, (u) => {
+      // Flip loading off immediately so the UI can render (skeletons hydrate from
+      // the offline cache); fetch the profile in the background. `hadSession` lets
+      // ProtectedRoute render returning users optimistically instead of blocking.
       setUser(u)
-      setProfile(u ? await bootstrapProfile(u) : null)
       setLoading(false)
+      if (u) {
+        localStorage.setItem('hadSession', '1')
+        void bootstrapProfile(u).then(setProfile)
+      } else {
+        localStorage.removeItem('hadSession')
+        setProfile(null)
+      }
     })
   }, [])
 

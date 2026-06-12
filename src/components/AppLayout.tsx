@@ -21,7 +21,7 @@ export function AppLayout() {
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
-        <NavLink to="/" className="font-bold text-amber-600">
+        <NavLink to="/" className="font-bold text-indigo-600">
           SplitWizard
         </NavLink>
         {profile && (
@@ -48,7 +48,7 @@ export function AppLayout() {
             end={end}
             className={({ isActive }) =>
               `flex flex-col items-center gap-0.5 px-3 py-1 text-xs ${
-                isActive ? "text-amber-600" : "text-slate-400"
+                isActive ? "text-indigo-600" : "text-slate-400"
               }`
             }
           >

@@ -8,6 +8,7 @@ import { monthKey } from '../lib/forecast'
 import { formatMoney } from '../lib/money'
 import { formatDate, monthYearLabel } from '../lib/date'
 import { SettleUpDialog } from '../components/SettleUpDialog'
+import { Skeleton } from '../components/Skeleton'
 import type { AmountMap, Expense } from '../types'
 
 export function GroupPage() {
@@ -40,7 +41,21 @@ export function GroupPage() {
   )
 
   if (!group) {
-    return <p className="text-slate-400">Loading group…</p>
+    return (
+      <div className="space-y-5">
+        <Skeleton className="h-7 w-40" />
+        <Skeleton className="h-24 w-full" />
+        <div className="flex gap-2">
+          <Skeleton className="h-10 flex-1" />
+          <Skeleton className="h-10 flex-1" />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      </div>
+    )
   }
 
   const visibleExpenses = expenses
@@ -103,14 +118,14 @@ export function GroupPage() {
       <div className="flex gap-2">
         <Link
           to={`/groups/${group.id}/add`}
-          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-amber-600 py-2 font-medium text-white"
+          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-indigo-600 py-2 font-medium text-white"
         >
           <Plus size={16} /> Add expense
         </Link>
         <button
           type="button"
           onClick={() => setShowSettle(true)}
-          className="flex-1 rounded-lg border border-amber-600 py-2 font-medium text-amber-700 dark:text-amber-400"
+          className="flex-1 rounded-lg border border-indigo-600 py-2 font-medium text-indigo-700 dark:text-indigo-400"
         >
           Settle up
         </button>
@@ -159,7 +174,7 @@ export function GroupPage() {
                           <div
                             className={
                               net > 0
-                                ? 'text-xs text-amber-400 dark:text-amber-300'
+                                ? 'text-xs text-indigo-400 dark:text-indigo-300'
                                 : 'text-xs text-rose-400 dark:text-rose-300'
                             }
                           >
@@ -211,7 +226,7 @@ function CurrencyBalanceCard({
 
   const tone = (v: number) =>
     v > 0
-      ? 'text-amber-600 dark:text-amber-400'
+      ? 'text-indigo-600 dark:text-indigo-400'
       : v < 0
         ? 'text-rose-600 dark:text-rose-400'
         : 'text-slate-400'
@@ -230,7 +245,7 @@ function CurrencyBalanceCard({
           {debts.map((d, i) => (
             <li key={i} className="text-sm">
               <span className="font-medium text-red-600">{nameOf(d.from)}</span> owes{' '}
-              <span className="font-medium text-amber-600">{nameOf(d.to)}</span>{' '}
+              <span className="font-medium text-indigo-600">{nameOf(d.to)}</span>{' '}
               {formatMoney(d.amount, currency)}
             </li>
           ))}
@@ -240,7 +255,7 @@ function CurrencyBalanceCard({
           {rawNets.map(([uid, v]) => (
             <li key={uid} className="text-sm">
               {nameOf(uid)}{' '}
-              <span className={v > 0 ? 'text-amber-600' : 'text-red-600'}>
+              <span className={v > 0 ? 'text-indigo-600' : 'text-red-600'}>
                 {v > 0 ? 'is owed' : 'owes'} {formatMoney(Math.abs(v), currency)}
               </span>
             </li>

@@ -16,15 +16,15 @@ export default defineConfig({
         name: 'SplitWizard',
         short_name: 'SplitWizard',
         description: 'Expense splitting with auto-installments',
-        theme_color: '#d97706',
-        background_color: '#ffffff',
+        theme_color: '#4f46e5',
+        background_color: '#4f46e5',
         display: 'standalone',
         start_url: '/',
         icons: [
           { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
           {
-            src: 'pwa-512x512.png',
+            src: 'pwa-maskable-512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
