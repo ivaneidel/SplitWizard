@@ -1,0 +1,78 @@
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react'
+import {
+  onAuthStateChanged,
+  signInWithPopup,
+  signOut as fbSignOut,
+  type User,
+} from 'firebase/auth'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
+import { auth, db, googleProvider } from '../lib/firebase'
+import type { UserProfile } from '../types'
+
+interface AuthState {
+  user: User | null
+  profile: UserProfile | null
+  loading: boolean
+  signIn: () => Promise<void>
+  signOut: () => Promise<void>
+}
+
+const AuthContext = createContext<AuthState | undefined>(undefined)
+
+/** Create the users/{uid} profile doc on first login; return the profile. */
+async function bootstrapProfile(user: User): Promise<UserProfile> {
+  const ref = doc(db, 'users', user.uid)
+  const snap = await getDoc(ref)
+  if (snap.exists()) {
+    return { uid: user.uid, ...(snap.data() as Omit<UserProfile, 'uid'>) }
+  }
+  const profile: Omit<UserProfile, 'uid' | 'createdAt'> = {
+    displayName: user.displayName ?? user.email ?? 'Anonymous',
+    email: user.email ?? '',
+    photoURL: user.photoURL ?? undefined,
+    defaultCurrency: 'ARS',
+    paymentAliases: [],
+  }
+  await setDoc(ref, { ...profile, createdAt: serverTimestamp() })
+  return { uid: user.uid, ...profile }
+}
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    return onAuthStateChanged(auth, async (u) => {
+      setUser(u)
+      setProfile(u ? await bootstrapProfile(u) : null)
+      setLoading(false)
+    })
+  }, [])
+
+  const signIn = async () => {
+    await signInWithPopup(auth, googleProvider)
+  }
+  const signOut = async () => {
+    await fbSignOut(auth)
+  }
+
+  return (
+    <AuthContext.Provider value={{ user, profile, loading, signIn, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
+export function useAuth(): AuthState {
+  const ctx = useContext(AuthContext)
+  if (!ctx) throw new Error('useAuth must be used within AuthProvider')
+  return ctx
+}
