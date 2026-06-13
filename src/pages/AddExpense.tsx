@@ -12,6 +12,7 @@ import {
 import { toMajor, toMinor } from "../lib/money";
 import { SplitEditor } from "../components/SplitEditor";
 import { Skeleton } from "../components/Skeleton";
+import { useT } from "../i18n";
 import type { AmountMap, SplitMode } from "../types";
 
 const BUILTIN_CATEGORIES = [
@@ -33,6 +34,7 @@ const INPUT =
 export function AddExpense() {
   const { groupId: routeGroupId, expenseId } = useParams();
   const editing = Boolean(expenseId);
+  const { t } = useT();
   const navigate = useNavigate();
   const { groups, loading: groupsLoading } = useGroups();
   // The group is fixed by the route (/groups/:groupId/add) or, when arriving via
@@ -61,7 +63,7 @@ export function AddExpense() {
   const [installments, setInstallments] = useState(false);
   const [count, setCount] = useState("10");
   const [busy, setBusy] = useState(false);
-  const [showMore, setShowMore] = useState(false);
+  const [showSplit, setShowSplit] = useState(false);
 
   // Arriving via /add: default the group to the last-viewed one (else the first).
   useEffect(() => {
@@ -118,19 +120,15 @@ export function AddExpense() {
   if (!group) {
     if (pickable && !groupsLoading && groups.length === 0)
       return (
-        <p className="text-slate-400">
-          You have no groups yet — create one first.
-        </p>
+        <p className="text-slate-400">{t("expense.noGroups")}</p>
       );
     return (
-      <div className="flex min-h-full flex-col justify-center">
-        <div className="mx-auto w-full max-w-md space-y-4">
-          <Skeleton className="mx-auto h-7 w-32" />
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="h-11 w-full" />
-          <Skeleton className="mx-auto h-9 w-48" />
-          <Skeleton className="h-12 w-full" />
-        </div>
+      <div className="w-full space-y-4">
+        <Skeleton className="h-7 w-32" />
+        <Skeleton className="h-11 w-full" />
+        <Skeleton className="h-11 w-full" />
+        <Skeleton className="h-9 w-48" />
+        <Skeleton className="h-12 w-full" />
       </div>
     );
   }
@@ -202,7 +200,7 @@ export function AddExpense() {
 
   const onDelete = () => {
     if (!existing) return;
-    if (!confirm("Delete this expense?")) return;
+    if (!confirm(t("expense.deleteConfirm"))) return;
     setBusy(true);
     deleteExpense(group.id, existing.id).catch((err) =>
       console.error("Failed to delete expense", err),
@@ -220,116 +218,152 @@ export function AddExpense() {
   };
 
   return (
-    <div className="flex min-h-full flex-col justify-center">
-      <div className="flex flex-col mx-auto w-full min-h-full max-w-md space-y-4 items-center">
-        <div className="flex items-center min-w-full gap-2">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate(-1)}
+          className="text-slate-400"
+        >
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="flex-1 text-xl font-bold">
+          {editing ? t("expense.editTitle") : t("expense.addTitle")}
+        </h1>
+        {editing && (
           <button
             type="button"
-            onClick={() => navigate(-1)}
-            className="text-slate-400"
+            onClick={() => void onDelete()}
+            className="text-red-500"
           >
-            <ArrowLeft size={20} />
+            <Trash2 size={20} />
           </button>
-          <h1 className="flex-1 text-xl font-bold">
-            {editing ? "Edit expense" : "Add expense"}
-          </h1>
-          {editing && (
-            <button
-              type="button"
-              onClick={() => void onDelete()}
-              className="text-red-500"
-            >
-              <Trash2 size={20} />
-            </button>
-          )}
-        </div>
-        <div className="w-75 min-h-full flex flex-col justify-center align-center gap-4">
-          {pickable && (
-            <label className="flex items-center gap-2 text-sm">
-              Group
-              <select
-                value={groupId}
-                onChange={(e) => setGroupId(e.target.value)}
-                className={`flex-1 ${INPUT}`}
-              >
-                {groups.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    {g.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+        )}
+      </div>
 
-          <input
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Description"
-            className={`${INPUT}`}
-          />
-
-          <div className="flex gap-2">
-            <input
-              type="number"
-              inputMode="decimal"
-              value={amountStr}
-              onChange={(e) => setAmountStr(e.target.value)}
-              placeholder="0.00"
-              className={`min-w-0 flex-1 ${INPUT}`}
-            />
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className={INPUT}
-            >
-              {[group.defaultCurrency, "USD", "EUR", "ARS", "BRL"]
-                .filter((c, i, a) => a.indexOf(c) === i)
-                .map((c) => (
-                  <option key={c} value={c}>
-                    {c}
-                  </option>
-                ))}
-            </select>
-          </div>
-
+      <div className="flex flex-col gap-4">
+        {pickable && (
           <label className="flex items-center gap-2 text-sm">
-            Paid by
+            {t("expense.group")}
             <select
-              value={payer}
-              onChange={(e) => setPayer(e.target.value)}
+              value={groupId}
+              onChange={(e) => setGroupId(e.target.value)}
               className={`flex-1 ${INPUT}`}
             >
-              {group.memberUids.map((m) => (
-                <option key={m} value={m}>
-                  {nameOf(m)}
+              {groups.map((g) => (
+                <option key={g.id} value={g.id}>
+                  {g.name}
                 </option>
               ))}
             </select>
           </label>
+        )}
 
-          <div>
-            <div className="mb-1 text-center text-sm font-semibold text-slate-500 dark:text-zinc-400">
-              Split between
-            </div>
-            <div className="flex flex-wrap justify-center gap-2">
-              {group.memberUids.map((m) => (
-                <button
-                  key={m}
-                  type="button"
-                  onClick={() => toggleMember(m)}
-                  className={
-                    selected.has(m)
-                      ? "rounded-full bg-indigo-600 px-3 py-1 text-sm text-white"
-                      : "rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500 dark:border-zinc-600 dark:text-zinc-400"
-                  }
-                >
-                  {nameOf(m)}
-                </button>
+        <input
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder={t("expense.descriptionPlaceholder")}
+          className={`w-full ${INPUT}`}
+        />
+
+        <div className="flex gap-2">
+          <input
+            type="number"
+            inputMode="decimal"
+            value={amountStr}
+            onChange={(e) => setAmountStr(e.target.value)}
+            placeholder={t("expense.amountPlaceholder")}
+            className={`min-w-0 flex-1 ${INPUT}`}
+          />
+          <select
+            value={currency}
+            onChange={(e) => setCurrency(e.target.value)}
+            className={INPUT}
+          >
+            {[group.defaultCurrency, "USD", "EUR", "ARS", "BRL"]
+              .filter((c, i, a) => a.indexOf(c) === i)
+              .map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
               ))}
-            </div>
-          </div>
+          </select>
+        </div>
 
-          {amount > 0 && participants.length > 0 && (
+        <div className="flex gap-2">
+          <input
+            list="category-options"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder={t("expense.categoryPlaceholder")}
+            className={`min-w-0 flex-1 capitalize ${INPUT}`}
+          />
+          <datalist id="category-options">
+            {categoryOptions.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
+          <input
+            type="date"
+            value={dateStr}
+            onChange={(e) => setDateStr(e.target.value)}
+            className={`min-w-0 flex-1 ${INPUT}`}
+          />
+        </div>
+
+        <label className="flex items-center gap-2 text-sm">
+          {t("expense.paidBy")}
+          <select
+            value={payer}
+            onChange={(e) => setPayer(e.target.value)}
+            className={`flex-1 ${INPUT}`}
+          >
+            {group.memberUids.map((m) => (
+              <option key={m} value={m}>
+                {nameOf(m)}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <button
+          type="button"
+          onClick={() => setShowSplit((v) => !v)}
+          className="flex items-center gap-1 text-sm text-slate-500 dark:text-zinc-400"
+        >
+          <ChevronDown
+            size={16}
+            className={`transition-transform ${showSplit ? "rotate-180" : ""}`}
+          />
+          {t("expense.splitting")}
+        </button>
+
+        {/* Kept mounted (hidden when collapsed) so the default equal split still
+            computes and the expense stays submittable without expanding. */}
+        <div className={showSplit ? "" : "hidden"}>
+          <div className="mb-1 text-sm font-semibold text-slate-500 dark:text-zinc-400">
+            {t("expense.splitBetween")}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {group.memberUids.map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => toggleMember(m)}
+                className={
+                  selected.has(m)
+                    ? "rounded-full bg-indigo-600 px-3 py-1 text-sm text-white"
+                    : "rounded-full border border-slate-300 px-3 py-1 text-sm text-slate-500 dark:border-zinc-600 dark:text-zinc-400"
+                }
+              >
+                {nameOf(m)}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {amount > 0 && participants.length > 0 && (
+          <div className={showSplit ? "" : "hidden"}>
             <SplitEditor
               amount={amount}
               currency={currency}
@@ -343,89 +377,53 @@ export function AddExpense() {
                 setSplitMode(mode);
               }}
             />
-          )}
+          </div>
+        )}
 
-          <button
-            type="button"
-            onClick={() => setShowMore((v) => !v)}
-            className="mx-auto flex items-center gap-1 text-sm text-slate-500 dark:text-zinc-400"
-          >
-            <ChevronDown
-              size={16}
-              className={`transition-transform ${showMore ? "rotate-180" : ""}`}
-            />
-            More
-          </button>
-
-          {showMore && (
-            <div className="space-y-4">
-              <div className="flex gap-2">
+        {!editing && (
+          <>
+            <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800">
+              <input
+                type="checkbox"
+                checked={installments}
+                onChange={(e) => setInstallments(e.target.checked)}
+              />
+              <span className="text-sm">
+                {t("expense.splitInstallments")}
+              </span>
+              {installments && (
                 <input
-                  list="category-options"
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  placeholder="Category"
-                  className={`min-w-0 flex-1 capitalize ${INPUT}`}
+                  type="number"
+                  value={count}
+                  onChange={(e) => setCount(e.target.value)}
+                  className="ml-auto w-16 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-zinc-600 dark:bg-zinc-900"
                 />
-                <datalist id="category-options">
-                  {categoryOptions.map((c) => (
-                    <option key={c} value={c} />
-                  ))}
-                </datalist>
-                <input
-                  type="date"
-                  value={dateStr}
-                  onChange={(e) => setDateStr(e.target.value)}
-                  className={`min-w-0 flex-1 ${INPUT}`}
-                />
-              </div>
-
-              {!editing && (
-                <>
-                  <label className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800">
-                    <input
-                      type="checkbox"
-                      checked={installments}
-                      onChange={(e) => setInstallments(e.target.checked)}
-                    />
-                    <span className="text-sm">
-                      Split into monthly installments
-                    </span>
-                    {installments && (
-                      <input
-                        type="number"
-                        value={count}
-                        onChange={(e) => setCount(e.target.value)}
-                        className="ml-auto w-16 rounded-md border border-slate-300 px-2 py-1 text-right text-sm dark:border-zinc-600 dark:bg-zinc-900"
-                      />
-                    )}
-                  </label>
-                  {installments && (
-                    <p className="text-xs text-slate-400">
-                      Creates {count}× expenses named “{description || "X"} 1/
-                      {count}” … on day{" "}
-                      {new Date(Date.parse(dateStr)).getUTCDate()} of each
-                      month. The amount above is the TOTAL.
-                    </p>
-                  )}
-                </>
               )}
-            </div>
-          )}
+            </label>
+            {installments && (
+              <p className="text-xs text-slate-400">
+                {t("expense.installmentHelp", {
+                  count,
+                  name: description || "X",
+                  day: new Date(Date.parse(dateStr)).getUTCDate(),
+                })}
+              </p>
+            )}
+          </>
+        )}
 
-          <button
-            type="button"
-            disabled={!canSubmit}
-            onClick={() => void submit()}
-            className="w-75 rounded-lg bg-indigo-600 py-3 font-medium text-white disabled:opacity-50"
-          >
-            {editing
-              ? "Save changes"
-              : installments
-                ? `Create ${count} installments`
-                : "Save expense"}
-          </button>
-        </div>
+        <button
+          type="button"
+          disabled={!canSubmit}
+          onClick={() => void submit()}
+          className="w-full rounded-lg bg-indigo-600 py-3 font-medium text-white disabled:opacity-50"
+        >
+          {editing
+            ? t("expense.saveChanges")
+            : installments
+              ? t("expense.createInstallments", { count })
+              : t("expense.saveExpense")}
+        </button>
       </div>
     </div>
   );

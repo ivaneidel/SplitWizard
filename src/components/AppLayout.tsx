@@ -7,17 +7,19 @@ import {
   Search,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { useT } from "../i18n";
 
 const NAV = [
-  { to: "/", label: "Home", icon: LayoutDashboard, end: true },
-  { to: "/installments", label: "Plans", icon: CalendarClock },
-  { to: "/search", label: "Search", icon: Search },
-  { to: "/charts", label: "Charts", icon: PieChart },
-  { to: "/activity", label: "Activity", icon: Activity },
+  { to: "/", key: "nav.home", icon: LayoutDashboard, end: true },
+  { to: "/installments", key: "nav.plans", icon: CalendarClock },
+  { to: "/search", key: "nav.search", icon: Search },
+  { to: "/charts", key: "nav.charts", icon: PieChart },
+  { to: "/activity", key: "nav.activity", icon: Activity },
 ];
 
 export function AppLayout() {
   const { profile } = useAuth();
+  const { t } = useT();
   const location = useLocation();
   const outlet = useOutlet();
   return (
@@ -46,7 +48,7 @@ export function AppLayout() {
       </main>
 
       <nav className="fixed inset-x-0 bottom-0 mx-auto flex max-w-3xl justify-around border-t border-slate-200 bg-white py-2 dark:border-zinc-700 dark:bg-zinc-800">
-        {NAV.map(({ to, label, icon: Icon, end }) => (
+        {NAV.map(({ to, key, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -58,7 +60,7 @@ export function AppLayout() {
             }
           >
             <Icon size={20} />
-            {label}
+            {t(key)}
           </NavLink>
         ))}
       </nav>

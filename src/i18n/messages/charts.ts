@@ -1,0 +1,28 @@
+export const charts = {
+  en: {
+    'charts.title': 'Charts & budgets',
+    'charts.byCategory': 'This month by category ({cur})',
+    'charts.noSpending': 'No spending this month.',
+    'charts.monthlyTrend': 'Monthly trend ({cur})',
+    'charts.allTime': 'All time',
+    'charts.noData': 'No data.',
+    'charts.budgets': 'Budgets ({cur}, this month)',
+    'charts.budgetsEmpty': 'Spend something to set budgets.',
+    'charts.setCapPlaceholder': 'Set monthly cap…',
+    'charts.removeCap': 'Remove cap',
+    'charts.remove': 'Remove',
+  },
+  es: {
+    'charts.title': 'Gráficos y presupuestos',
+    'charts.byCategory': 'Este mes por categoría ({cur})',
+    'charts.noSpending': 'Sin gastos este mes.',
+    'charts.monthlyTrend': 'Tendencia mensual ({cur})',
+    'charts.allTime': 'Todo el tiempo',
+    'charts.noData': 'Sin datos.',
+    'charts.budgets': 'Presupuestos ({cur}, este mes)',
+    'charts.budgetsEmpty': 'Registrá algún gasto para fijar presupuestos.',
+    'charts.setCapPlaceholder': 'Fijar tope mensual…',
+    'charts.removeCap': 'Quitar tope',
+    'charts.remove': 'Quitar',
+  },
+}

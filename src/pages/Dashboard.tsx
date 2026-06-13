@@ -10,6 +10,7 @@ import { monthKey } from "../lib/forecast";
 import { formatMoney } from "../lib/money";
 import { Modal } from "../components/Modal";
 import { Skeleton } from "../components/Skeleton";
+import { useT } from "../i18n";
 import type { Group } from "../types";
 
 const CURRENCIES = ["ARS", "USD", "EUR", "BRL", "CLP", "UYU"];
@@ -17,6 +18,7 @@ const INPUT =
   "w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800";
 
 function GroupRow({ g }: { g: Group }) {
+  const { t } = useT();
   return (
     <Link
       to={`/groups/${g.id}`}
@@ -36,8 +38,10 @@ function GroupRow({ g }: { g: Group }) {
       <span className="flex-1">
         <span className="block font-medium">{g.name}</span>
         <span className="block text-sm text-slate-400">
-          {g.memberUids.length} member{g.memberUids.length > 1 ? "s" : ""} ·{" "}
-          {g.defaultCurrency}
+          {g.memberUids.length === 1
+            ? t("dashboard.member_one", { count: g.memberUids.length })
+            : t("dashboard.member_other", { count: g.memberUids.length })}{" "}
+          · {g.defaultCurrency}
         </span>
       </span>
     </Link>
@@ -45,6 +49,7 @@ function GroupRow({ g }: { g: Group }) {
 }
 
 export function Dashboard() {
+  const { t } = useT();
   const { groups, loading } = useGroups();
   const { user, profile } = useAuth();
   const [open, setOpen] = useState(false);
@@ -101,13 +106,13 @@ export function Dashboard() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Your groups</h1>
+        <h1 className="text-xl font-bold">{t("dashboard.title")}</h1>
         <button
           type="button"
           onClick={() => setOpen(true)}
           className="flex items-center gap-1 rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white"
         >
-          <Plus size={16} /> New
+          <Plus size={16} /> {t("dashboard.new")}
         </button>
       </div>
 
@@ -118,7 +123,7 @@ export function Dashboard() {
       {monthEntries.length > 0 && (
         <div className="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-950">
           <div className="text-sm text-indigo-700 dark:text-indigo-400">
-            This month
+            {t("dashboard.this_month")}
           </div>
           <ul className="mt-1 space-y-0.5">
             {monthEntries.map(([cur, net]) => (
@@ -130,7 +135,7 @@ export function Dashboard() {
                     : "font-semibold text-rose-700 dark:text-rose-300"
                 }
               >
-                {net > 0 ? "you lent " : "you owe "}
+                {net > 0 ? t("dashboard.you_lent") : t("dashboard.you_owe")}{" "}
                 {formatMoney(Math.abs(net), cur)}
               </li>
             ))}
@@ -148,9 +153,7 @@ export function Dashboard() {
         </ul>
       )}
       {!loading && active.length === 0 && (
-        <p className="text-slate-500">
-          No groups yet. Create one to get started.
-        </p>
+        <p className="text-slate-500">{t("dashboard.empty")}</p>
       )}
 
       <ul className="space-y-2">
@@ -168,7 +171,8 @@ export function Dashboard() {
             onClick={() => setShowArchived((s) => !s)}
             className="text-sm text-slate-400"
           >
-            {showArchived ? "▾" : "▸"} Archived ({archived.length})
+            {showArchived ? "▾" : "▸"} {t("dashboard.archived")} (
+            {archived.length})
           </button>
           {showArchived && (
             <ul className="mt-2 space-y-2 opacity-70">
@@ -182,13 +186,17 @@ export function Dashboard() {
         </div>
       )}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="New group">
+      <Modal
+        open={open}
+        onClose={() => setOpen(false)}
+        title={t("dashboard.new_group")}
+      >
         <div className="space-y-3">
           <input
             autoFocus
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Group name (e.g. Roomies)"
+            placeholder={t("dashboard.group_name_placeholder")}
             className={INPUT}
           />
           <select
@@ -208,7 +216,7 @@ export function Dashboard() {
             onClick={() => void submit()}
             className="w-full rounded-lg bg-indigo-600 py-2 font-medium text-white disabled:opacity-50"
           >
-            Create
+            {t("dashboard.create")}
           </button>
         </div>
       </Modal>

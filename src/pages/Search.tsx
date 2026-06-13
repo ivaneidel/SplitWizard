@@ -6,6 +6,7 @@ import { useGroups } from "../hooks/useGroups";
 import { formatMoney, toMajor } from "../lib/money";
 import { formatDate } from "../lib/date";
 import type { Expense } from "../types";
+import { useT } from "../i18n";
 
 /** Match by description substring, or by amount when the query is numeric. */
 function matchesText(e: Expense, q: string): boolean {
@@ -25,6 +26,7 @@ const INPUT =
   "rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800";
 
 export function Search() {
+  const { t } = useT();
   const { expenses } = useAllExpenses();
   const { groups } = useGroups();
   // Search state lives in the URL so the browser back button restores it
@@ -73,7 +75,7 @@ export function Search() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Search all over</h1>
+      <h1 className="text-xl font-bold">{t("search.title")}</h1>
 
       <div className="flex items-center gap-2">
         <div className="flex flex-1 items-center gap-2 rounded-lg border border-slate-300 bg-white px-3 dark:border-zinc-600 dark:bg-zinc-800">
@@ -81,7 +83,7 @@ export function Search() {
           <input
             value={q}
             onChange={(e) => update("q", e.target.value)}
-            placeholder="Description or amount…"
+            placeholder={t("search.placeholder")}
             className="w-full bg-transparent py-2 outline-none"
           />
         </div>
@@ -96,7 +98,7 @@ export function Search() {
                 ? "border-indigo-500 text-indigo-600"
                 : "border-slate-300 text-slate-500 dark:border-zinc-600"
             }`}
-            title="Date filter"
+            title={t("search.date_filter")}
           >
             <SlidersHorizontal size={18} />
             {hasRange && (
@@ -112,7 +114,7 @@ export function Search() {
               />
               <div className="absolute right-0 z-20 mt-2 w-64 space-y-3 rounded-lg border border-slate-200 bg-white p-3 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
                 <label className="block text-sm">
-                  <span className="text-slate-400">From</span>
+                  <span className="text-slate-400">{t("search.from")}</span>
                   <input
                     type="date"
                     value={from}
@@ -121,7 +123,7 @@ export function Search() {
                   />
                 </label>
                 <label className="block text-sm">
-                  <span className="text-slate-400">To</span>
+                  <span className="text-slate-400">{t("search.to")}</span>
                   <input
                     type="date"
                     value={to}
@@ -138,7 +140,7 @@ export function Search() {
                     }}
                     className="text-sm text-slate-400"
                   >
-                    Clear dates
+                    {t("search.clear_dates")}
                   </button>
                 )}
               </div>
@@ -149,13 +151,16 @@ export function Search() {
 
       {(q.trim() || hasRange) && (
         <p className="text-sm text-slate-400">
-          {results.length} result{results.length === 1 ? "" : "s"}
+          {t(
+            results.length === 1 ? "search.result_one" : "search.result_other",
+            { count: results.length },
+          )}
         </p>
       )}
 
       {!results.length && (
         <div className="font-medium text-center p-2 text-gray-400 italic">
-          Start typing to see expenses
+          {t("search.empty")}
         </div>
       )}
       {!!results.length && (

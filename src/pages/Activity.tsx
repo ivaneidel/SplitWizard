@@ -7,8 +7,10 @@ import { useAuth } from '../hooks/useAuth'
 import { buildActivity, type ActivityEntry } from '../lib/activity'
 import { formatMoney } from '../lib/money'
 import { formatDate } from '../lib/date'
+import { useT } from '../i18n'
 
 export function Activity() {
+  const { t } = useT()
   const { expenses, loading } = useAllExpenses()
   const settlements = useAllSettlements()
   const { groups } = useGroups()
@@ -21,9 +23,9 @@ export function Activity() {
     return m
   }, [groups])
   const nameOf = (uid: string) =>
-    uid === user?.uid ? 'You' : (nameByUid[uid] ?? uid.slice(0, 6))
+    uid === user?.uid ? t('activity.you') : (nameByUid[uid] ?? uid.slice(0, 6))
   const groupName = (id: string) =>
-    groups.find((g) => g.id === id)?.name ?? 'a group'
+    groups.find((g) => g.id === id)?.name ?? t('activity.aGroup')
 
   const entries = useMemo(
     () => (user ? buildActivity(expenses, settlements, user.uid) : []),
@@ -41,10 +43,10 @@ export function Activity() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">Activity</h1>
-      {loading && <p className="text-slate-400">Loading…</p>}
+      <h1 className="text-xl font-bold">{t('activity.title')}</h1>
+      {loading && <p className="text-slate-400">{t('activity.loading')}</p>}
       {!loading && entries.length === 0 && (
-        <p className="text-slate-500">No activity yet.</p>
+        <p className="text-slate-500">{t('activity.empty')}</p>
       )}
 
       {days.map((d) => (
@@ -66,12 +68,13 @@ export function Activity() {
                   <div className="truncate text-sm">
                     {e.kind === 'expense' ? (
                       <>
-                        <span className="font-medium">{nameOf(e.actorUid)}</span> added “
-                        {e.description}”
+                        <span className="font-medium">{nameOf(e.actorUid)}</span>{' '}
+                        {t('activity.addedExpense', { description: e.description ?? '' })}
                       </>
                     ) : (
                       <>
-                        <span className="font-medium">{nameOf(e.actorUid)}</span> paid{' '}
+                        <span className="font-medium">{nameOf(e.actorUid)}</span>{' '}
+                        {t('activity.paid')}{' '}
                         <span className="font-medium">{nameOf(e.toUid ?? '')}</span>
                       </>
                     )}

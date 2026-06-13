@@ -5,15 +5,11 @@ import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useAuth } from '../hooks/useAuth'
 import { forecastByMonth, planProgress, type PlanProgress } from '../lib/forecast'
 import { formatMoney } from '../lib/money'
-import { formatDate } from '../lib/date'
-
-const MONTH_FMT = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
-const monthLabel = (key: string) => {
-  const [y, m] = key.split('-').map(Number)
-  return MONTH_FMT.format(new Date(Date.UTC(y, m - 1, 1)))
-}
+import { formatDate, monthKeyLabel } from '../lib/date'
+import { useT } from '../i18n'
 
 function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
+  const { t } = useT()
   return (
     <li>
       <Link
@@ -25,7 +21,7 @@ function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
         <div className="flex items-center justify-between">
           <span className="font-medium">{p.baseDescription}</span>
           <span className="flex items-center gap-1 text-sm text-slate-500">
-            {p.paid}/{p.total} paid
+            {t('installments.paidOf', { paid: p.paid, total: p.total })}
             <ChevronRight size={16} className="text-slate-400" />
           </span>
         </div>
@@ -37,7 +33,7 @@ function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
         </div>
         {p.nextDate && (
           <div className="mt-1 text-xs text-slate-400">
-            Next: {formatDate(p.nextDate)}
+            {t('installments.next')}: {formatDate(p.nextDate)}
           </div>
         )}
       </Link>
@@ -46,6 +42,7 @@ function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
 }
 
 export function Installments() {
+  const { t } = useT()
   const { expenses, loading } = useAllExpenses()
   const { user } = useAuth()
   const now = Date.now()
@@ -63,21 +60,18 @@ export function Installments() {
   return (
     <div className="space-y-5">
       <h1 className="flex items-center gap-2 text-xl font-bold">
-        <CalendarClock size={22} /> Installments
+        <CalendarClock size={22} /> {t('installments.title')}
       </h1>
 
-      {loading && <p className="text-slate-400">Loading…</p>}
+      {loading && <p className="text-slate-400">{t('installments.loading')}</p>}
       {!loading && plans.length === 0 && (
-        <p className="text-slate-500">
-          No installment plans yet. Create one from “Add expense → Split into
-          monthly installments”.
-        </p>
+        <p className="text-slate-500">{t('installments.empty')}</p>
       )}
 
       {nextMonth && (
         <div className="rounded-lg bg-indigo-50 p-4 dark:bg-indigo-950">
           <div className="text-sm text-indigo-700 dark:text-indigo-400">
-            Due {monthLabel(nextMonth.month)}
+            {t('installments.due', { month: monthKeyLabel(nextMonth.month) })}
           </div>
           <div className="mt-1 space-x-2 text-lg font-bold text-indigo-800 dark:text-indigo-300">
             {Object.entries(nextMonth.totalByCurrency).map(([cur, amt]) => (
@@ -85,8 +79,12 @@ export function Installments() {
             ))}
           </div>
           <div className="text-xs text-indigo-600">
-            across {nextMonth.expenses.length} commitment
-            {nextMonth.expenses.length > 1 ? 's' : ''}
+            {t(
+              nextMonth.expenses.length === 1
+                ? 'installments.commitment_one'
+                : 'installments.commitment_other',
+              { count: nextMonth.expenses.length },
+            )}
           </div>
         </div>
       )}
@@ -95,7 +93,7 @@ export function Installments() {
       {active.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-            Plans
+            {t('installments.plans')}
           </h2>
           <ul className="space-y-2">
             {active.map((p) => (
@@ -113,7 +111,7 @@ export function Installments() {
             onClick={() => setShowDone((s) => !s)}
             className="text-sm font-semibold text-slate-500 dark:text-zinc-400"
           >
-            {showDone ? '▾' : '▸'} Completed ({done.length})
+            {showDone ? '▾' : '▸'} {t('installments.completed', { count: done.length })}
           </button>
           {showDone && (
             <ul className="space-y-2">
@@ -129,7 +127,7 @@ export function Installments() {
       {forecast.length > 0 && (
         <section className="space-y-2">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-            Upcoming by month
+            {t('installments.upcomingByMonth')}
           </h2>
           {forecast.map((m) => (
             <div
@@ -137,7 +135,7 @@ export function Installments() {
               className="rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800"
             >
               <div className="flex justify-between">
-                <span className="font-medium">{monthLabel(m.month)}</span>
+                <span className="font-medium">{monthKeyLabel(m.month)}</span>
                 <span className="space-x-2 font-medium text-slate-500 dark:text-zinc-400">
                   {Object.entries(m.totalByCurrency).map(([cur, amt]) => (
                     <span key={cur}>{formatMoney(amt, cur)}</span>

@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './hooks/useAuth'
+import { LocaleProvider } from './i18n'
 import { applyTheme, getStoredTheme } from './hooks/useTheme'
 
 // Apply theme before first paint to avoid a flash of the wrong theme.
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <LocaleProvider>
+          <App />
+        </LocaleProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

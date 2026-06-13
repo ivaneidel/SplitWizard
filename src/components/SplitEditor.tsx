@@ -3,12 +3,13 @@ import type { AmountMap, SplitMode } from '../types'
 import { computeSplits } from '../lib/splits'
 import { formatMoney, toMinor } from '../lib/money'
 import { cn } from '../lib/cn'
+import { useT } from '../i18n'
 
-const MODES: { key: SplitMode; label: string }[] = [
-  { key: 'equal', label: 'Equally' },
-  { key: 'exact', label: 'Exact' },
-  { key: 'percent', label: '%' },
-  { key: 'shares', label: 'Shares' },
+const MODES: { key: SplitMode; labelKey: string }[] = [
+  { key: 'equal', labelKey: 'expense.modeEqual' },
+  { key: 'exact', labelKey: 'expense.modeExact' },
+  { key: 'percent', labelKey: 'expense.modePercent' },
+  { key: 'shares', labelKey: 'expense.modeShares' },
 ]
 
 export function SplitEditor({
@@ -30,6 +31,7 @@ export function SplitEditor({
   /** Initial per-uid raw input values (major units for exact mode). */
   initialRaw?: Record<string, string>
 }) {
+  const { t } = useT()
   const [mode, setMode] = useState<SplitMode>(initialMode)
   // Raw text inputs per uid for exact/percent/shares.
   const [raw, setRaw] = useState<Record<string, string>>(initialRaw ?? {})
@@ -86,7 +88,7 @@ export function SplitEditor({
                 : 'text-slate-500 dark:text-zinc-400',
             )}
           >
-            {m.label}
+            {t(m.labelKey)}
           </button>
         ))}
       </div>
@@ -127,7 +129,7 @@ export function SplitEditor({
         )}
       >
         {formatMoney(total, currency)} / {formatMoney(amount, currency)}
-        {!valid && ' — must match'}
+        {!valid && t('expense.mustMatch')}
       </div>
     </div>
   )

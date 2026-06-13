@@ -16,6 +16,7 @@ import { formatMoney, toMajor, toMinor } from '../lib/money'
 import { formatDate } from '../lib/date'
 import { Modal } from '../components/Modal'
 import { Skeleton } from '../components/Skeleton'
+import { useT } from '../i18n'
 import type { Expense } from '../types'
 
 const INPUT =
@@ -35,6 +36,7 @@ const indexOf = (e: Expense) => {
 }
 
 export function PlanDetail() {
+  const { t } = useT()
   const { planId } = useParams()
   const navigate = useNavigate()
   const { expenses, loading } = useAllExpenses()
@@ -89,9 +91,9 @@ export function PlanDetail() {
     return (
       <div className="space-y-4">
         <Link to="/installments" className="inline-flex items-center gap-1 text-slate-400">
-          <ArrowLeft size={20} /> Installments
+          <ArrowLeft size={20} /> {t('installments.title')}
         </Link>
-        <p className="text-slate-400">Plan not found.</p>
+        <p className="text-slate-400">{t('installments.notFound')}</p>
       </div>
     )
   }
@@ -160,7 +162,7 @@ export function PlanDetail() {
 
   const removePlan = () => {
     if (!groupId) return
-    if (!confirm('Delete this plan and all its installments?')) return
+    if (!confirm(t('installments.deleteConfirm'))) return
     deleteInstallmentPlan(groupId, planId!).catch((err) =>
       console.error('Failed to delete plan', err),
     )
@@ -178,7 +180,7 @@ export function PlanDetail() {
           <button
             type="button"
             onClick={openEdit}
-            title="Edit plan"
+            title={t('installments.editPlan')}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-zinc-700"
           >
             <Pencil size={22} />
@@ -186,7 +188,7 @@ export function PlanDetail() {
           <button
             type="button"
             onClick={removePlan}
-            title="Delete plan"
+            title={t('installments.deletePlan')}
             className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-zinc-700"
           >
             <Trash2 size={22} />
@@ -201,7 +203,7 @@ export function PlanDetail() {
             {group?.name}
           </span>
           <span className="text-sm font-medium">
-            {paid}/{rows.length} paid
+            {t('installments.paidOf', { paid, total: rows.length })}
           </span>
         </div>
         <div className="mt-2 space-x-2 text-lg font-bold">
@@ -211,7 +213,7 @@ export function PlanDetail() {
         </div>
         {next && (
           <div className="mt-1 text-xs text-slate-400">
-            Next: {formatDate(next.date)}
+            {t('installments.next')}: {formatDate(next.date)}
           </div>
         )}
       </div>
@@ -219,9 +221,11 @@ export function PlanDetail() {
       {/* Missing-row hint */}
       {rows.length < declared && (
         <div className="rounded-lg bg-indigo-50 p-3 text-sm text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300">
-          You have {rows.length} of {declared} installments —{' '}
-          {declared - rows.length} may be missing. Use “Add missing installment”
-          below to fold it in.
+          {t('installments.missingHint', {
+            have: rows.length,
+            declared,
+            missing: declared - rows.length,
+          })}
         </div>
       )}
 
@@ -230,13 +234,13 @@ export function PlanDetail() {
         onClick={() => setPicking(true)}
         className="flex w-full items-center justify-center gap-1 rounded-lg border border-indigo-600 py-2 font-medium text-indigo-700 dark:text-indigo-400"
       >
-        <Plus size={16} /> Add missing installment
+        <Plus size={16} /> {t('installments.addMissing')}
       </button>
 
       {/* Installments */}
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-          Installments
+          {t('installments.title')}
         </h2>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-lg border border-slate-200 bg-white dark:divide-zinc-700 dark:border-zinc-700 dark:bg-zinc-800">
           {rows.map((e) => (
@@ -252,14 +256,16 @@ export function PlanDetail() {
                 <div className="text-right">
                   <div className="font-medium">{formatMoney(e.amount, e.currency)}</div>
                   <div className="text-xs text-slate-400">
-                    your share {formatMoney(e.splits[user?.uid ?? ''] ?? 0, e.currency)}
+                    {t('installments.yourShare', {
+                      amt: formatMoney(e.splits[user?.uid ?? ''] ?? 0, e.currency),
+                    })}
                   </div>
                 </div>
               </Link>
               <button
                 type="button"
                 onClick={() => void unlink(e)}
-                title="Remove from plan"
+                title={t('installments.removeFromPlan')}
                 className="px-3 text-slate-400 hover:text-rose-500 disabled:opacity-50"
               >
                 <Unlink size={16} />
@@ -270,9 +276,7 @@ export function PlanDetail() {
       </section>
 
       {/* Edit per row uses the existing expense edit screen */}
-      <p className="text-xs text-slate-400">
-        Tap an installment to edit it, or unlink to make it standalone again.
-      </p>
+      <p className="text-xs text-slate-400">{t('installments.tapToEdit')}</p>
 
       <Modal
         open={picking}
@@ -280,7 +284,7 @@ export function PlanDetail() {
           setPicking(false)
           setFilter('')
         }}
-        title={`Add to ${base}`}
+        title={t('installments.addTo', { base })}
       >
         <div className="space-y-3">
           <div className="flex items-center gap-2 rounded-lg border border-slate-300 px-3 dark:border-zinc-600">
@@ -288,13 +292,13 @@ export function PlanDetail() {
             <input
               value={filter}
               onChange={(ev) => setFilter(ev.target.value)}
-              placeholder="Filter expenses…"
+              placeholder={t('installments.filterPlaceholder')}
               className="w-full bg-transparent py-2 outline-none"
             />
           </div>
           {candidates.length === 0 ? (
             <p className="py-4 text-center text-sm text-slate-400">
-              No unlinked expenses in this group.
+              {t('installments.noUnlinked')}
             </p>
           ) : (
             <ul className="max-h-72 divide-y divide-slate-100 overflow-y-auto rounded-lg border border-slate-200 dark:divide-zinc-700 dark:border-zinc-700">
@@ -318,20 +322,20 @@ export function PlanDetail() {
         </div>
       </Modal>
 
-      <Modal open={editing} onClose={() => setEditing(false)} title="Edit plan">
+      <Modal open={editing} onClose={() => setEditing(false)} title={t('installments.editPlan')}>
         <div className="space-y-3">
           <label className="block text-sm">
-            <span className="text-slate-500 dark:text-zinc-400">Description</span>
+            <span className="text-slate-500 dark:text-zinc-400">{t('installments.description')}</span>
             <input
               value={editDesc}
               onChange={(e) => setEditDesc(e.target.value)}
-              placeholder="Description"
+              placeholder={t('installments.description')}
               className={`mt-1 ${INPUT}`}
             />
           </label>
           <label className="block text-sm">
             <span className="text-slate-500 dark:text-zinc-400">
-              Total amount ({currency})
+              {t('installments.totalAmount', { currency })}
             </span>
             <input
               type="number"
@@ -343,15 +347,19 @@ export function PlanDetail() {
             />
           </label>
           <p className="text-xs text-slate-400">
-            Split evenly across {rows.length} installment
-            {rows.length > 1 ? 's' : ''}; the “… i/{declared}” numbering is kept.
+            {t(
+              rows.length === 1
+                ? 'installments.splitEvenly_one'
+                : 'installments.splitEvenly_other',
+              { count: rows.length, declared },
+            )}
           </p>
           {drift && (
             <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
-              Heads up: these installments aren’t all equal (e.g.{' '}
-              {formatMoney(Math.max(...rows.map((r) => r.amount)), currency)} vs{' '}
-              {formatMoney(Math.min(...rows.map((r) => r.amount)), currency)}). Saving
-              will make them all equal. Continue only if that’s what you want.
+              {t('installments.drift', {
+                max: formatMoney(Math.max(...rows.map((r) => r.amount)), currency),
+                min: formatMoney(Math.min(...rows.map((r) => r.amount)), currency),
+              })}
             </div>
           )}
           <button
@@ -360,7 +368,7 @@ export function PlanDetail() {
             onClick={saveEdit}
             className="w-full rounded-lg bg-indigo-600 py-2.5 font-medium text-white disabled:opacity-50"
           >
-            Save changes
+            {t('installments.saveChanges')}
           </button>
         </div>
       </Modal>

@@ -9,9 +9,11 @@ import { formatMoney } from '../lib/money'
 import { formatDate, monthYearLabel } from '../lib/date'
 import { SettleUpDialog } from '../components/SettleUpDialog'
 import { Skeleton } from '../components/Skeleton'
+import { useT } from '../i18n'
 import type { AmountMap, Expense } from '../types'
 
 export function GroupPage() {
+  const { t } = useT()
   const { groupId } = useParams()
   const { groups } = useGroups()
   const group = groups.find((g) => g.id === groupId)
@@ -27,7 +29,7 @@ export function GroupPage() {
   }, [group])
 
   const nameOf = (uid: string) =>
-    group?.members[uid]?.displayName ?? (uid === user?.uid ? 'You' : uid.slice(0, 6))
+    group?.members[uid]?.displayName ?? (uid === user?.uid ? t('group.you') : uid.slice(0, 6))
 
   const thisMonth = monthKey(Date.now())
   // Per-currency balances restricted to the current month.
@@ -92,7 +94,7 @@ export function GroupPage() {
         <Link
           to={`/groups/${group.id}/settings`}
           className="text-slate-400"
-          title="Group settings"
+          title={t('group.settings')}
         >
           <Settings size={20} />
         </Link>
@@ -111,7 +113,7 @@ export function GroupPage() {
           />
         ))}
         {Object.keys(balances).length === 0 && (
-          <p className="text-slate-400">All settled up.</p>
+          <p className="text-slate-400">{t('group.allSettled')}</p>
         )}
       </section>
 
@@ -120,24 +122,24 @@ export function GroupPage() {
           to={`/groups/${group.id}/add`}
           className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-indigo-600 py-2 font-medium text-white"
         >
-          <Plus size={16} /> Add expense
+          <Plus size={16} /> {t('group.addExpense')}
         </Link>
         <button
           type="button"
           onClick={() => setShowSettle(true)}
           className="flex-1 rounded-lg border border-indigo-600 py-2 font-medium text-indigo-700 dark:text-indigo-400"
         >
-          Settle up
+          {t('group.settleUp')}
         </button>
       </div>
 
       {/* Expense list, grouped by month */}
       <section className="space-y-4">
         <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-          Expenses
+          {t('group.expenses')}
         </h2>
         {visibleExpenses.length === 0 && (
-          <p className="text-slate-400">No expenses yet.</p>
+          <p className="text-slate-400">{t('group.noExpenses')}</p>
         )}
         {monthGroups.map((grp) => (
           <div key={grp.label} className="space-y-1">
@@ -162,7 +164,7 @@ export function GroupPage() {
                       <div>
                         <div className="font-medium">{e.description}</div>
                         <div className="text-xs text-slate-400">
-                          {formatDate(e.date)} · paid by{' '}
+                          {formatDate(e.date)} · {t('group.paidBy')}{' '}
                           {Object.keys(e.paidBy).map(nameOf).join(', ')}
                         </div>
                       </div>
@@ -179,8 +181,8 @@ export function GroupPage() {
                             }
                           >
                             {net > 0
-                              ? `you lent ${formatMoney(net, e.currency)}`
-                              : `lent to you ${formatMoney(-net, e.currency)}`}
+                              ? t('group.youLent', { amt: formatMoney(net, e.currency) })
+                              : t('group.lentToYou', { amt: formatMoney(-net, e.currency) })}
                           </div>
                         )}
                       </div>
@@ -216,6 +218,7 @@ function CurrencyBalanceCard({
   simplify: boolean
   nameOf: (uid: string) => string
 }) {
+  const { t } = useT()
   const debts = useMemo(() => simplifyDebts(net, currency), [net, currency])
   // `simplify` off => show each person's raw net instead of minimized transfers.
   const rawNets = Object.entries(net).filter(([, v]) => v !== 0)
@@ -239,12 +242,13 @@ function CurrencyBalanceCard({
         {currency}
       </div>
       {debts.length === 0 ? (
-        <p className="text-slate-400">Settled up.</p>
+        <p className="text-slate-400">{t('group.settled')}</p>
       ) : simplify ? (
         <ul className="space-y-1">
           {debts.map((d, i) => (
             <li key={i} className="text-sm">
-              <span className="font-medium text-red-600">{nameOf(d.from)}</span> owes{' '}
+              <span className="font-medium text-red-600">{nameOf(d.from)}</span>{' '}
+              {t('group.owes')}{' '}
               <span className="font-medium text-indigo-600">{nameOf(d.to)}</span>{' '}
               {formatMoney(d.amount, currency)}
             </li>
@@ -256,7 +260,7 @@ function CurrencyBalanceCard({
             <li key={uid} className="text-sm">
               {nameOf(uid)}{' '}
               <span className={v > 0 ? 'text-indigo-600' : 'text-red-600'}>
-                {v > 0 ? 'is owed' : 'owes'} {formatMoney(Math.abs(v), currency)}
+                {v > 0 ? t('group.isOwed') : t('group.owes')} {formatMoney(Math.abs(v), currency)}
               </span>
             </li>
           ))}
@@ -267,10 +271,10 @@ function CurrencyBalanceCard({
       {people.length > 0 && (
         <div className="mt-3 border-t border-slate-100 pt-2 dark:border-zinc-700">
           <div className="mb-1 flex justify-between text-[11px] uppercase tracking-wide text-slate-400">
-            <span>Person</span>
+            <span>{t('group.person')}</span>
             <span className="flex gap-4">
-              <span className="w-24 text-right">All time</span>
-              <span className="w-24 text-right">This month</span>
+              <span className="w-24 text-right">{t('group.allTime')}</span>
+              <span className="w-24 text-right">{t('group.thisMonth')}</span>
             </span>
           </div>
           {people.map((uid) => (

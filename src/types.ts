@@ -22,6 +22,8 @@ export interface UserProfile {
   defaultCurrency: CurrencyCode
   /** Free-text payment aliases shown on settle-up (CBU/alias/PayPal/etc). */
   paymentAliases?: string[]
+  /** UI language preference: 'system' follows the device, else a forced locale. */
+  language?: 'system' | 'en' | 'es'
   createdAt?: number
 }
 

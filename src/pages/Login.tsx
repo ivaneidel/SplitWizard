@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import { useT } from '../i18n'
 
 export function Login() {
   const { user, loading, signIn } = useAuth()
+  const { t } = useT()
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -14,9 +16,7 @@ export function Login() {
     <div className="flex h-full flex-col items-center justify-center gap-8 px-6">
       <div className="text-center">
         <h1 className="text-3xl font-bold text-indigo-600">SplitWizard</h1>
-        <p className="mt-2 text-slate-500">
-          Split expenses, auto-installments, import your history.
-        </p>
+        <p className="mt-2 text-slate-500">{t('login.tagline')}</p>
       </div>
       <button
         type="button"
@@ -28,7 +28,7 @@ export function Login() {
           alt=""
           className="h-5 w-5"
         />
-        Continue with Google
+        {t('login.continueGoogle')}
       </button>
     </div>
   )

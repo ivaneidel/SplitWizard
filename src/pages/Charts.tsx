@@ -20,11 +20,13 @@ import {
 import { monthKey } from '../lib/forecast'
 import { formatMoney, toMajor, toMinor } from '../lib/money'
 import { deleteBudget, setBudget } from '../lib/firestore'
+import { useT } from '../i18n'
 
 const COLORS = ['#4f46e5', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316']
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
 
 export function Charts() {
+  const { t } = useT()
   const { expenses } = useAllExpenses()
   const { user } = useAuth()
   const budgets = useBudgets()
@@ -57,7 +59,7 @@ export function Charts() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold">Charts & budgets</h1>
+        <h1 className="text-xl font-bold">{t('charts.title')}</h1>
         {currencies.length > 1 && (
           <select
             value={cur}
@@ -75,10 +77,10 @@ export function Charts() {
 
       <section>
         <h2 className="mb-2 text-sm font-semibold text-slate-500 dark:text-zinc-400">
-          This month by category ({cur})
+          {t('charts.byCategory', { cur })}
         </h2>
         {pieData.length === 0 ? (
-          <p className="text-slate-400">No spending this month.</p>
+          <p className="text-slate-400">{t('charts.noSpending')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={220}>
             <PieChart>
@@ -96,14 +98,14 @@ export function Charts() {
       <section>
         <div className="mb-2 flex items-center justify-between">
           <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-            Monthly trend ({cur})
+            {t('charts.monthlyTrend', { cur })}
           </h2>
           <select
             value={trendYear}
             onChange={(e) => setTrendYear(e.target.value)}
             className="rounded-lg border border-slate-300 px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800"
           >
-            <option value="all">All time</option>
+            <option value="all">{t('charts.allTime')}</option>
             {trendYears.map((y) => (
               <option key={y} value={y}>
                 {y}
@@ -112,7 +114,7 @@ export function Charts() {
           </select>
         </div>
         {barData.length === 0 ? (
-          <p className="text-slate-400">No data.</p>
+          <p className="text-slate-400">{t('charts.noData')}</p>
         ) : (
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={barData}>
@@ -126,10 +128,10 @@ export function Charts() {
 
       <section className="space-y-2">
         <h2 className="text-sm font-semibold text-slate-500 dark:text-zinc-400">
-          Budgets ({cur}, this month)
+          {t('charts.budgets', { cur })}
         </h2>
         {Object.keys(byCategory).length === 0 && (
-          <p className="text-slate-400">Spend something to set budgets.</p>
+          <p className="text-slate-400">{t('charts.budgetsEmpty')}</p>
         )}
         {Object.keys(byCategory).map((cat) => {
           const spent = byCategory[cat]
@@ -166,7 +168,7 @@ export function Charts() {
               <div className="mt-2 flex items-center gap-2">
                 <input
                   type="number"
-                  placeholder="Set monthly cap…"
+                  placeholder={t('charts.setCapPlaceholder')}
                   defaultValue={cap ? toMajor(cap, cur) : ''}
                   onBlur={(e) => {
                     const v = e.target.value.trim()
@@ -180,9 +182,9 @@ export function Charts() {
                     type="button"
                     onClick={() => void deleteBudget(user.uid, cat)}
                     className="shrink-0 text-xs text-slate-400 hover:text-red-500"
-                    title="Remove cap"
+                    title={t('charts.removeCap')}
                   >
-                    Remove
+                    {t('charts.remove')}
                   </button>
                 )}
               </div>

@@ -4,6 +4,7 @@ import type { Group } from '../types'
 import { toMinor } from '../lib/money'
 import { addSettlement } from '../lib/firestore'
 import { useAuth } from '../hooks/useAuth'
+import { useT } from '../i18n'
 import { Modal } from './Modal'
 
 export function SettleUpDialog({
@@ -17,6 +18,7 @@ export function SettleUpDialog({
   group: Group
   balances: CurrencyBalances
 }) {
+  const { t } = useT()
   const { user } = useAuth()
   const members = group.memberUids
   const currencies = Object.keys(balances)
@@ -50,7 +52,7 @@ export function SettleUpDialog({
   const nameOf = (uid: string) => group.members[uid]?.displayName ?? uid.slice(0, 6)
 
   return (
-    <Modal open={open} onClose={onClose} title="Settle up">
+    <Modal open={open} onClose={onClose} title={t('group.settleUp')}>
       <div className="space-y-3">
         <div className="space-y-1">
           <select
@@ -64,7 +66,7 @@ export function SettleUpDialog({
               </option>
             ))}
           </select>
-          <div className="text-center text-xs text-slate-400">pays</div>
+          <div className="text-center text-xs text-slate-400">{t('group.pays')}</div>
           <select
             value={to}
             onChange={(e) => setTo(e.target.value)}
@@ -99,7 +101,7 @@ export function SettleUpDialog({
           </select>
         </div>
         {from === to && (
-          <p className="text-sm text-red-600">Payer and payee must differ.</p>
+          <p className="text-sm text-red-600">{t('group.payerPayeeDiffer')}</p>
         )}
         <button
           type="button"
@@ -107,7 +109,7 @@ export function SettleUpDialog({
           onClick={() => void submit()}
           className="w-full rounded-lg bg-indigo-600 py-2 font-medium text-white disabled:opacity-50"
         >
-          Record payment
+          {t('group.recordPayment')}
         </button>
       </div>
     </Modal>

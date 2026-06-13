@@ -13,8 +13,10 @@ import {
 } from '../lib/excel'
 import { importExpenses } from '../lib/firestore'
 import { detectInstallmentPlans } from '../lib/installmentDetect'
+import { useT } from '../i18n'
 
 export function ImportExport() {
+  const { t } = useT()
   const { groups } = useGroups()
   const { expenses } = useAllExpenses()
   const { user } = useAuth()
@@ -72,9 +74,16 @@ export function ImportExport() {
         user!.uid,
       )
       const planNote = detection.plans.length
-        ? ` (${detection.plans.length} installment plan${detection.plans.length > 1 ? 's' : ''})`
+        ? t(
+            detection.plans.length === 1
+              ? 'importexport.planNote_one'
+              : 'importexport.planNote_other',
+            { count: detection.plans.length },
+          )
         : ''
-      setDone(`Imported ${n} expenses into ${group.name}${planNote}.`)
+      setDone(
+        t('importexport.imported', { count: n, group: group.name, planNote }),
+      )
       setParsed(null)
       setMapping({})
     } finally {
@@ -110,16 +119,16 @@ export function ImportExport() {
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-bold">Import / Export</h1>
+      <h1 className="text-xl font-bold">{t('importexport.title')}</h1>
 
       <label className="block text-sm">
-        Group
+        {t('importexport.group')}
         <select
           value={groupId}
           onChange={(e) => setGroupId(e.target.value)}
           className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800"
         >
-          <option value="">Select a group…</option>
+          <option value="">{t('importexport.selectGroup')}</option>
           {groups.map((g) => (
             <option key={g.id} value={g.id}>
               {g.name}
@@ -136,13 +145,14 @@ export function ImportExport() {
             onClick={doExport}
             className="flex items-center gap-2 rounded-lg border border-slate-300 px-4 py-2 font-medium dark:border-zinc-600"
           >
-            <Download size={16} /> Export {group.name} to Excel
+            <Download size={16} />{' '}
+            {t('importexport.exportToExcel', { group: group.name })}
           </button>
 
           {/* Import */}
           <div className="space-y-3 rounded-lg border border-slate-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
             <div className="flex items-center gap-2 font-medium">
-              <Upload size={16} /> Import a Splitwise export
+              <Upload size={16} /> {t('importexport.importHeading')}
             </div>
             <input
               type="file"
@@ -154,9 +164,7 @@ export function ImportExport() {
             {parsed && (
               <>
                 <p className="text-xs text-slate-500">
-                  Map each person column to a group member. Balances are preserved
-                  exactly; the original payer/split detail isn’t recoverable from a
-                  net-only export.
+                  {t('importexport.mapHint')}
                 </p>
                 <ul className="space-y-1">
                   {parsed.personColumns.map((col) => (
@@ -170,7 +178,7 @@ export function ImportExport() {
                         }
                         className="flex-1 rounded-md border border-slate-300 px-2 py-1 dark:border-zinc-600 dark:bg-zinc-900"
                       >
-                        <option value="">(skip)</option>
+                        <option value="">{t('importexport.skip')}</option>
                         {group.memberUids.map((u) => (
                           <option key={u} value={u}>
                             {group.members[u]?.displayName ?? u}
@@ -187,22 +195,27 @@ export function ImportExport() {
                     checked={detect}
                     onChange={(e) => setDetect(e.target.checked)}
                   />
-                  Detect installment plans
+                  {t('importexport.detectPlans')}
                 </label>
                 {detect && detection.plans.length > 0 && (
                   <p className="text-xs text-indigo-600">
-                    Detected {detection.plans.length} installment plan
-                    {detection.plans.length > 1 ? 's' : ''} (
-                    {detection.plans
-                      .map((p) => `${p.baseDescription} ×${p.count}`)
-                      .join(', ')}
-                    )
+                    {t(
+                      detection.plans.length === 1
+                        ? 'importexport.detected_one'
+                        : 'importexport.detected_other',
+                      {
+                        count: detection.plans.length,
+                        plans: detection.plans
+                          .map((p) => `${p.baseDescription} ×${p.count}`)
+                          .join(', '),
+                      },
+                    )}
                   </p>
                 )}
 
                 <div className="max-h-48 overflow-y-auto rounded-md bg-slate-50 p-2 text-xs dark:bg-zinc-900">
                   <div className="mb-1 font-medium text-slate-500 dark:text-zinc-400">
-                    Preview ({preview.length})
+                    {t('importexport.preview', { count: preview.length })}
                   </div>
                   {preview.slice(0, 50).map((e, i) => (
                     <div key={i} className="text-slate-500">
@@ -217,7 +230,9 @@ export function ImportExport() {
                   onClick={() => void doImport()}
                   className="w-full rounded-lg bg-indigo-600 py-2 font-medium text-white disabled:opacity-50"
                 >
-                  {busy ? 'Importing…' : `Import ${preview.length} expenses`}
+                  {busy
+                    ? t('importexport.importing')
+                    : t('importexport.importBtn', { count: preview.length })}
                 </button>
               </>
             )}

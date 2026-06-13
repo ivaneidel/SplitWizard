@@ -1,0 +1,26 @@
+export const settings = {
+  en: {
+    'settings.title': 'Settings',
+    'settings.appearance': 'Appearance',
+    'settings.system': 'System',
+    'settings.light': 'Light',
+    'settings.dark': 'Dark',
+    'settings.defaultCurrency': 'Default currency',
+    'settings.language': 'Language',
+    'settings.data': 'Data',
+    'settings.importExport': 'Import / Export',
+    'settings.signOut': 'Sign out',
+  },
+  es: {
+    'settings.title': 'Ajustes',
+    'settings.appearance': 'Apariencia',
+    'settings.system': 'Sistema',
+    'settings.light': 'Claro',
+    'settings.dark': 'Oscuro',
+    'settings.defaultCurrency': 'Moneda predeterminada',
+    'settings.language': 'Idioma',
+    'settings.data': 'Datos',
+    'settings.importExport': 'Importar / Exportar',
+    'settings.signOut': 'Cerrar sesión',
+  },
+}
