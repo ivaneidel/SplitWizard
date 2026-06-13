@@ -22,6 +22,24 @@ html.dark body {
   color: #e4e4e7;
 }
 
+/* Fluid page transitions: the routed content fades/slides in on each navigation
+   while the header + bottom nav stay fixed. Skipped under reduced-motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .page-transition {
+    animation: page-enter 200ms ease-out;
+  }
+}
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 /* Native-app feel: no accidental text highlighting or long-press callout.
    Inputs/textareas keep selection so editing still works. */
 body {

@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, useLocation, useOutlet } from "react-router-dom";
 import {
   Activity,
   CalendarClock,
@@ -18,6 +18,8 @@ const NAV = [
 
 export function AppLayout() {
   const { profile } = useAuth();
+  const location = useLocation();
+  const outlet = useOutlet();
   return (
     <div className="mx-auto flex min-h-full max-w-3xl flex-col">
       <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 dark:border-zinc-700 dark:bg-zinc-800">
@@ -35,8 +37,11 @@ export function AppLayout() {
       </header>
 
       <main className="flex flex-1 overflow-y-auto p-4 pb-24">
-        <div className="flex min-w-full items-stretch flex-col">
-          <Outlet />
+        <div
+          key={location.pathname}
+          className="page-transition flex min-w-full items-stretch flex-col"
+        >
+          {outlet}
         </div>
       </main>
 
