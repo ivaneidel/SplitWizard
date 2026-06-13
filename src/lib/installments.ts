@@ -80,6 +80,94 @@ export function generateInstallments(cfg: InstallmentConfig): ExpenseDraft[] {
   })
 }
 
+/** A plan's existing expense row, enough to recompute it. */
+export interface PlanRowLike {
+  id: string
+  description: string
+  amount: number
+  installmentIndex?: number
+  paidBy: AmountMap
+  splits: AmountMap
+}
+
+export interface RowUpdate {
+  id: string
+  description: string
+  amount: number
+  paidBy: AmountMap
+  splits: AmountMap
+}
+
+/**
+ * True when the rows' amounts aren't a clean even split — i.e. they differ by more
+ * than the 1-minor-unit rounding `splitEvenly` can introduce. Used to warn before a
+ * bulk edit normalizes them back to equal.
+ */
+export function amountsDrift(rows: { amount: number }[]): boolean {
+  if (rows.length < 2) return false
+  const amts = rows.map((r) => r.amount)
+  return Math.max(...amts) - Math.min(...amts) > 1
+}
+
+const rowIndex = (r: PlanRowLike): number => {
+  if (typeof r.installmentIndex === 'number') return r.installmentIndex
+  const m = r.description.match(/\s+(\d+)\/\d+$/)
+  return m ? Number(m[1]) : 0
+}
+
+/** Swap the base part of a "Base i/M" description, keeping its " i/M" suffix. */
+const rebase = (desc: string, base: string): string => {
+  const m = desc.match(/(\s+\d+\/\d+)$/)
+  return m ? `${base}${m[1]}` : base
+}
+
+/** Pick the row whose amount is most common (mode) as the split-ratio template,
+ *  so a drifted/pricier row doesn't skew the per-installment distribution. */
+function templateRow(rows: PlanRowLike[]): PlanRowLike {
+  const counts = new Map<number, number>()
+  for (const r of rows) counts.set(r.amount, (counts.get(r.amount) ?? 0) + 1)
+  let best = rows[0]
+  let bestCount = -1
+  for (const r of rows) {
+    const c = counts.get(r.amount) ?? 0
+    if (c > bestCount) {
+      bestCount = c
+      best = r
+    }
+  }
+  return best
+}
+
+/**
+ * Recompute every row of a plan for a new `totalAmount` and/or `baseDescription`:
+ * splits the total evenly across the rows (remainder on the earliest) and divides
+ * each installment by the payer/split ratios of the representative row. Rows keep
+ * their ids and the trailing " i/M" of their descriptions.
+ */
+export function redistributeInstallments(
+  rows: PlanRowLike[],
+  totalAmount: number,
+  baseDescription: string,
+): RowUpdate[] {
+  const ordered = [...rows].sort((a, b) => rowIndex(a) - rowIndex(b))
+  if (ordered.length === 0) return []
+
+  const tmpl = templateRow(ordered)
+  const payerUids = Object.keys(tmpl.paidBy)
+  const splitUids = Object.keys(tmpl.splits)
+  const payerWeights = payerUids.map((u) => tmpl.paidBy[u])
+  const splitWeights = splitUids.map((u) => tmpl.splits[u])
+
+  const amounts = splitEvenly(totalAmount, ordered.length)
+  return ordered.map((r, i) => ({
+    id: r.id,
+    amount: amounts[i],
+    description: rebase(r.description, baseDescription),
+    paidBy: zip(payerUids, splitByWeights(amounts[i], payerWeights)),
+    splits: zip(splitUids, splitByWeights(amounts[i], splitWeights)),
+  }))
+}
+
 function zip(uids: string[], amounts: number[]): AmountMap {
   const map: AmountMap = {}
   uids.forEach((u, i) => {

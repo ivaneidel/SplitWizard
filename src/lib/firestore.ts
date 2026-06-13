@@ -24,7 +24,11 @@ import type {
   InstallmentPlan,
   Settlement,
 } from '../types'
-import { generateInstallments, type InstallmentConfig } from './installments'
+import {
+  generateInstallments,
+  type InstallmentConfig,
+  type RowUpdate,
+} from './installments'
 import { remapKey, remapList } from './claim'
 import type { ImportedExpense } from './excel'
 import type { DetectedPlan } from './installmentDetect'
@@ -509,6 +513,28 @@ export async function unlinkExpenseFromPlan(groupId: string, expenseId: string) 
     installmentIndex: deleteField(),
     updatedAt: now(),
   })
+}
+
+/** Bulk-edit a plan: rewrite each row's amount/splits/description and patch the
+ *  plan doc, all in one batch. */
+export async function bulkEditInstallmentPlan(
+  groupId: string,
+  planId: string,
+  rowUpdates: RowUpdate[],
+  planPatch: Partial<InstallmentPlan>,
+) {
+  const batch = writeBatch(db)
+  for (const u of rowUpdates) {
+    batch.update(doc(db, 'groups', groupId, 'expenses', u.id), {
+      description: u.description,
+      amount: u.amount,
+      paidBy: u.paidBy,
+      splits: u.splits,
+      updatedAt: now(),
+    })
+  }
+  batch.update(doc(db, 'installmentPlans', planId), planPatch as DocumentData)
+  await batch.commit()
 }
 
 export async function deleteInstallmentPlan(groupId: string, planId: string) {

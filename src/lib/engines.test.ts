@@ -8,7 +8,13 @@ import {
 } from './money'
 import { computeSplits, splitsAreValid } from './splits'
 import { computeBalances, simplifyAll, simplifyDebts } from './balances'
-import { generateInstallments, installmentDate } from './installments'
+import {
+  amountsDrift,
+  generateInstallments,
+  installmentDate,
+  redistributeInstallments,
+  type PlanRowLike,
+} from './installments'
 import { convertMinor, convertRate } from './fx'
 import type { Expense, Settlement } from '../types'
 
@@ -238,6 +244,43 @@ describe('installments', () => {
     const d = new Date(installmentDate(Date.UTC(2026, 0, 31), 1, 31))
     expect(d.getUTCMonth()).toBe(1) // February
     expect(d.getUTCDate()).toBe(28)
+  })
+})
+
+describe('installment bulk edit', () => {
+  // Plan with a pricier first installment (the import-detection edge case).
+  const drifted: PlanRowLike[] = [
+    { id: 'a', description: 'TV 1/3', amount: 5000, installmentIndex: 1, paidBy: { me: 5000 }, splits: { me: 2500, you: 2500 } },
+    { id: 'b', description: 'TV 2/3', amount: 1000, installmentIndex: 2, paidBy: { me: 1000 }, splits: { me: 500, you: 500 } },
+    { id: 'c', description: 'TV 3/3', amount: 1000, installmentIndex: 3, paidBy: { me: 1000 }, splits: { me: 500, you: 500 } },
+  ]
+
+  it('flags drift when amounts are not an even split', () => {
+    expect(amountsDrift(drifted)).toBe(true)
+    expect(amountsDrift([{ amount: 3334 }, { amount: 3333 }])).toBe(false) // rounding only
+    expect(amountsDrift([{ amount: 1000 }])).toBe(false)
+  })
+
+  it('redistributes a new total evenly and keeps i/M numbering', () => {
+    const updates = redistributeInstallments(drifted, 9000, 'Television')
+    expect(updates.map((u) => u.amount)).toEqual([3000, 3000, 3000])
+    expect(sum(updates.map((u) => u.amount))).toBe(9000)
+    expect(updates.map((u) => u.description)).toEqual([
+      'Television 1/3',
+      'Television 2/3',
+      'Television 3/3',
+    ])
+    // Splits use the representative (most common) row's ratios; each row balanced.
+    for (const u of updates) {
+      expect(sum(Object.values(u.paidBy))).toBe(u.amount)
+      expect(sum(Object.values(u.splits))).toBe(u.amount)
+      expect(u.splits).toEqual({ me: 1500, you: 1500 })
+    }
+  })
+
+  it('puts the rounding remainder on the earliest installments', () => {
+    const updates = redistributeInstallments(drifted, 10001, 'TV')
+    expect(updates.map((u) => u.amount)).toEqual([3334, 3334, 3333])
   })
 })
 

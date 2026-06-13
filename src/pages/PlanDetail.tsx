@@ -1,19 +1,25 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, Plus, Search, Unlink } from 'lucide-react'
+import { Link, useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeft, Pencil, Plus, Search, Trash2, Unlink } from 'lucide-react'
 import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useGroups } from '../hooks/useGroups'
 import { useAuth } from '../hooks/useAuth'
 import {
+  bulkEditInstallmentPlan,
+  deleteInstallmentPlan,
   linkExpenseToPlan,
   unlinkExpenseFromPlan,
   updateInstallmentPlan,
 } from '../lib/firestore'
-import { formatMoney } from '../lib/money'
+import { amountsDrift, redistributeInstallments } from '../lib/installments'
+import { formatMoney, toMajor, toMinor } from '../lib/money'
 import { formatDate } from '../lib/date'
 import { Modal } from '../components/Modal'
 import { Skeleton } from '../components/Skeleton'
 import type { Expense } from '../types'
+
+const INPUT =
+  'w-full rounded-lg border border-slate-300 px-3 py-2 dark:border-zinc-600 dark:bg-zinc-800'
 
 /** Strip a trailing " i/M" from an installment description. */
 const baseOf = (desc: string) => desc.replace(/\s+\d+\/\d+$/, '')
@@ -30,6 +36,7 @@ const indexOf = (e: Expense) => {
 
 export function PlanDetail() {
   const { planId } = useParams()
+  const navigate = useNavigate()
   const { expenses, loading } = useAllExpenses()
   const { groups } = useGroups()
   const { user } = useAuth()
@@ -37,6 +44,9 @@ export function PlanDetail() {
 
   const [picking, setPicking] = useState(false)
   const [filter, setFilter] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [editDesc, setEditDesc] = useState('')
+  const [editAmount, setEditAmount] = useState('')
 
   const rows = useMemo(
     () =>
@@ -125,6 +135,38 @@ export function PlanDetail() {
     persistTotal(rows.filter((r) => r.id !== e.id))
   }
 
+  const currency = rows[0].currency
+  const total = totalByCurrency[currency] ?? 0
+  const drift = amountsDrift(rows)
+
+  const openEdit = () => {
+    setEditDesc(base)
+    setEditAmount(String(toMajor(total, currency)))
+    setEditing(true)
+  }
+
+  const saveEdit = () => {
+    if (!groupId) return
+    const desc = editDesc.trim()
+    const newTotal = toMinor(editAmount || '0', currency)
+    if (!desc || newTotal <= 0) return
+    const updates = redistributeInstallments(rows, newTotal, desc)
+    bulkEditInstallmentPlan(groupId, planId!, updates, {
+      baseDescription: desc,
+      totalAmount: newTotal,
+    }).catch((err) => console.error('Failed to edit plan', err))
+    setEditing(false)
+  }
+
+  const removePlan = () => {
+    if (!groupId) return
+    if (!confirm('Delete this plan and all its installments?')) return
+    deleteInstallmentPlan(groupId, planId!).catch((err) =>
+      console.error('Failed to delete plan', err),
+    )
+    navigate('/installments')
+  }
+
   return (
     <div className="space-y-5">
       <div className="flex items-center gap-2">
@@ -132,6 +174,24 @@ export function PlanDetail() {
           <ArrowLeft size={20} />
         </Link>
         <h1 className="flex-1 truncate text-xl font-bold">{base}</h1>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={openEdit}
+            title="Edit plan"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-indigo-600 dark:hover:bg-zinc-700"
+          >
+            <Pencil size={22} />
+          </button>
+          <button
+            type="button"
+            onClick={removePlan}
+            title="Delete plan"
+            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-rose-500 dark:hover:bg-zinc-700"
+          >
+            <Trash2 size={22} />
+          </button>
+        </div>
       </div>
 
       {/* Summary */}
@@ -255,6 +315,53 @@ export function PlanDetail() {
               ))}
             </ul>
           )}
+        </div>
+      </Modal>
+
+      <Modal open={editing} onClose={() => setEditing(false)} title="Edit plan">
+        <div className="space-y-3">
+          <label className="block text-sm">
+            <span className="text-slate-500 dark:text-zinc-400">Description</span>
+            <input
+              value={editDesc}
+              onChange={(e) => setEditDesc(e.target.value)}
+              placeholder="Description"
+              className={`mt-1 ${INPUT}`}
+            />
+          </label>
+          <label className="block text-sm">
+            <span className="text-slate-500 dark:text-zinc-400">
+              Total amount ({currency})
+            </span>
+            <input
+              type="number"
+              inputMode="decimal"
+              value={editAmount}
+              onChange={(e) => setEditAmount(e.target.value)}
+              placeholder="0.00"
+              className={`mt-1 ${INPUT}`}
+            />
+          </label>
+          <p className="text-xs text-slate-400">
+            Split evenly across {rows.length} installment
+            {rows.length > 1 ? 's' : ''}; the “… i/{declared}” numbering is kept.
+          </p>
+          {drift && (
+            <div className="rounded-lg bg-amber-50 p-3 text-xs text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+              Heads up: these installments aren’t all equal (e.g.{' '}
+              {formatMoney(Math.max(...rows.map((r) => r.amount)), currency)} vs{' '}
+              {formatMoney(Math.min(...rows.map((r) => r.amount)), currency)}). Saving
+              will make them all equal. Continue only if that’s what you want.
+            </div>
+          )}
+          <button
+            type="button"
+            disabled={!editDesc.trim() || toMinor(editAmount || '0', currency) <= 0}
+            onClick={saveEdit}
+            className="w-full rounded-lg bg-indigo-600 py-2.5 font-medium text-white disabled:opacity-50"
+          >
+            Save changes
+          </button>
         </div>
       </Modal>
     </div>
