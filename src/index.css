@@ -22,6 +22,21 @@ html.dark body {
   color: #e4e4e7;
 }
 
+/* Native-app feel: no accidental text highlighting or long-press callout.
+   Inputs/textareas keep selection so editing still works. */
+body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+}
+
+input,
+textarea,
+[contenteditable='true'] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* Native <select>: replace the flush arrow with a chevron that has a little
    right gap (applies app-wide; the `!important` beats the px-3 utility). */
 select {

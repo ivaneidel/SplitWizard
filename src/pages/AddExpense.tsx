@@ -138,76 +138,76 @@ export function AddExpense() {
   const canSubmit =
     description.trim() && amount > 0 && splitValid && payer && !busy;
 
-  const submit = async () => {
+  const submit = () => {
     if (!user || !canSubmit) return;
     setBusy(true);
-    try {
-      const date = Date.parse(dateStr);
-      const cat = category.trim().toLowerCase() || "general";
-      const paidBy: AmountMap = { [payer]: amount };
-      const participantUids = Array.from(
-        new Set([...Object.keys(paidBy), ...Object.keys(splits)]),
+    const date = Date.parse(dateStr);
+    const cat = category.trim().toLowerCase() || "general";
+    const paidBy: AmountMap = { [payer]: amount };
+    const participantUids = Array.from(
+      new Set([...Object.keys(paidBy), ...Object.keys(splits)]),
+    );
+    // Fire the write but DON'T await it: offline, a Firestore write promise only
+    // resolves once it reaches the server. The local cache write applies
+    // synchronously (listeners update immediately), so navigate right away and
+    // let it sync in the background.
+    let write: Promise<unknown>;
+    if (editing && existing) {
+      write = updateExpense(group.id, existing.id, {
+        description: description.trim(),
+        amount,
+        currency,
+        category: cat,
+        date,
+        splitMode,
+        paidBy,
+        splits,
+        participantUids,
+      });
+    } else if (installments) {
+      const n = Math.max(2, parseInt(count, 10) || 2);
+      write = createInstallmentPlan(
+        group.id,
+        {
+          baseDescription: description.trim(),
+          totalAmount: amount,
+          count: n,
+          dayOfMonth: new Date(date).getUTCDate(),
+          startDate: date,
+          currency,
+          category: cat,
+          paidBy,
+          splits,
+        },
+        user.uid,
       );
-      if (editing && existing) {
-        await updateExpense(group.id, existing.id, {
-          description: description.trim(),
-          amount,
-          currency,
-          category: cat,
-          date,
-          splitMode,
-          paidBy,
-          splits,
-          participantUids,
-        });
-      } else if (installments) {
-        const n = Math.max(2, parseInt(count, 10) || 2);
-        await createInstallmentPlan(
-          group.id,
-          {
-            baseDescription: description.trim(),
-            totalAmount: amount,
-            count: n,
-            dayOfMonth: new Date(date).getUTCDate(),
-            startDate: date,
-            currency,
-            category: cat,
-            paidBy,
-            splits,
-          },
-          user.uid,
-        );
-      } else {
-        await addExpense(group.id, {
-          description: description.trim(),
-          amount,
-          currency,
-          fxRate: 1,
-          category: cat,
-          date,
-          splitMode,
-          paidBy,
-          splits,
-          participantUids,
-          createdBy: user.uid,
-        });
-      }
-      navigate(`/groups/${group.id}`);
-    } finally {
-      setBusy(false);
+    } else {
+      write = addExpense(group.id, {
+        description: description.trim(),
+        amount,
+        currency,
+        fxRate: 1,
+        category: cat,
+        date,
+        splitMode,
+        paidBy,
+        splits,
+        participantUids,
+        createdBy: user.uid,
+      });
     }
+    write.catch((err) => console.error("Failed to save expense", err));
+    navigate(`/groups/${group.id}`);
   };
 
-  const onDelete = async () => {
+  const onDelete = () => {
     if (!existing) return;
     if (!confirm("Delete this expense?")) return;
     setBusy(true);
-    try {
-      await deleteExpense(group.id, existing.id);
-      navigate(`/groups/${group.id}`);
-    } finally {
-      setBusy(false);
-    }
+    deleteExpense(group.id, existing.id).catch((err) =>
+      console.error("Failed to delete expense", err),
+    );
+    navigate(`/groups/${group.id}`);
   };
 
   const toggleMember = (uid: string) => {

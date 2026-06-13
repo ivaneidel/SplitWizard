@@ -59,7 +59,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false)
       if (u) {
         localStorage.setItem('hadSession', '1')
-        void bootstrapProfile(u).then(setProfile)
+        // Background — never blocks render; offline cache-miss is non-fatal.
+        bootstrapProfile(u)
+          .then(setProfile)
+          .catch((err) => console.error('Failed to load profile', err))
       } else {
         localStorage.removeItem('hadSession')
         setProfile(null)

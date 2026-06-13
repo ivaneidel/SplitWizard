@@ -37,7 +37,6 @@ export function PlanDetail() {
 
   const [picking, setPicking] = useState(false)
   const [filter, setFilter] = useState('')
-  const [busy, setBusy] = useState(false)
 
   const rows = useMemo(
     () =>
@@ -104,30 +103,26 @@ export function PlanDetail() {
     void updateInstallmentPlan(planId!, { totalAmount: total }).catch(() => {})
   }
 
-  const link = async (e: Expense) => {
-    if (!groupId || busy) return
-    setBusy(true)
-    try {
-      const idx =
-        indexOf(e) || Math.max(0, ...rows.map(indexOf)) + 1
-      await linkExpenseToPlan(groupId, e.id, planId!, idx)
-      persistTotal([...rows, e])
-      setPicking(false)
-      setFilter('')
-    } finally {
-      setBusy(false)
-    }
+  // Writes are fired without awaiting: offline, a Firestore write promise only
+  // resolves on server ack, but the local cache write applies synchronously and
+  // the live listener refreshes `rows` immediately. Awaiting would freeze the UI.
+  const link = (e: Expense) => {
+    if (!groupId) return
+    const idx = indexOf(e) || Math.max(0, ...rows.map(indexOf)) + 1
+    linkExpenseToPlan(groupId, e.id, planId!, idx).catch((err) =>
+      console.error('Failed to link expense to plan', err),
+    )
+    persistTotal([...rows, e])
+    setPicking(false)
+    setFilter('')
   }
 
-  const unlink = async (e: Expense) => {
-    if (!groupId || busy) return
-    setBusy(true)
-    try {
-      await unlinkExpenseFromPlan(groupId, e.id)
-      persistTotal(rows.filter((r) => r.id !== e.id))
-    } finally {
-      setBusy(false)
-    }
+  const unlink = (e: Expense) => {
+    if (!groupId) return
+    unlinkExpenseFromPlan(groupId, e.id).catch((err) =>
+      console.error('Failed to unlink expense', err),
+    )
+    persistTotal(rows.filter((r) => r.id !== e.id))
   }
 
   return (
@@ -204,7 +199,6 @@ export function PlanDetail() {
               <button
                 type="button"
                 onClick={() => void unlink(e)}
-                disabled={busy}
                 title="Remove from plan"
                 className="px-3 text-slate-400 hover:text-rose-500 disabled:opacity-50"
               >
@@ -249,8 +243,7 @@ export function PlanDetail() {
                   <button
                     type="button"
                     onClick={() => void link(e)}
-                    disabled={busy}
-                    className="flex w-full items-center justify-between p-3 text-left transition hover:bg-slate-50 disabled:opacity-50 dark:hover:bg-zinc-700/50"
+                    className="flex w-full items-center justify-between p-3 text-left transition hover:bg-slate-50 dark:hover:bg-zinc-700/50"
                   >
                     <div>
                       <div className="font-medium">{e.description}</div>
