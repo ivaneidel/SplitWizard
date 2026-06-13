@@ -35,6 +35,10 @@ service cloud.firestore {
     match /installmentPlans/{planId} {
       allow read, delete: if signedIn() && isMemberOf(resource.data.groupId);
       allow create: if signedIn() && isMemberOf(request.resource.data.groupId);
+      // Editing a plan (e.g. totalAmount when folding in a missed installment);
+      // group ownership of the doc can't change.
+      allow update: if signedIn() && isMemberOf(resource.data.groupId)
+        && request.resource.data.groupId == resource.data.groupId;
     }
 
     // Per-user budgets.

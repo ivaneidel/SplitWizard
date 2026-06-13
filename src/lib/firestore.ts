@@ -3,6 +3,7 @@ import {
   collection,
   collectionGroup,
   deleteDoc,
+  deleteField,
   doc,
   getDocs,
   onSnapshot,
@@ -480,6 +481,36 @@ export async function createInstallmentPlan(
 }
 
 /** Delete a plan and every expense row it generated (batched). */
+/** Patch an installment plan doc (e.g. keep `totalAmount` truthful after edits). */
+export async function updateInstallmentPlan(
+  planId: string,
+  patch: Partial<InstallmentPlan>,
+) {
+  await updateDoc(doc(db, 'installmentPlans', planId), patch as DocumentData)
+}
+
+/** Fold an existing standalone expense into an installment plan. */
+export async function linkExpenseToPlan(
+  groupId: string,
+  expenseId: string,
+  planId: string,
+  installmentIndex: number,
+) {
+  await updateExpense(groupId, expenseId, {
+    installmentPlanId: planId,
+    installmentIndex,
+  })
+}
+
+/** Detach an expense from its plan, returning it to a standalone expense. */
+export async function unlinkExpenseFromPlan(groupId: string, expenseId: string) {
+  await updateDoc(doc(db, 'groups', groupId, 'expenses', expenseId), {
+    installmentPlanId: deleteField(),
+    installmentIndex: deleteField(),
+    updatedAt: now(),
+  })
+}
+
 export async function deleteInstallmentPlan(groupId: string, planId: string) {
   const rows = await getDocs(
     query(expensesCol(groupId), where('installmentPlanId', '==', planId)),

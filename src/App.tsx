@@ -8,6 +8,7 @@ import { GroupPage } from './pages/GroupPage'
 import { GroupSettings } from './pages/GroupSettings'
 import { AddExpense } from './pages/AddExpense'
 import { Installments } from './pages/Installments'
+import { PlanDetail } from './pages/PlanDetail'
 import { Search } from './pages/Search'
 import { Activity } from './pages/Activity'
 import { Settings } from './pages/Settings'
@@ -43,6 +44,7 @@ export default function App() {
           element={<AddExpense />}
         />
         <Route path="/installments" element={<Installments />} />
+        <Route path="/installments/:planId" element={<PlanDetail />} />
         <Route path="/search" element={<Search />} />
         <Route path="/activity" element={<Activity />} />
         <Route

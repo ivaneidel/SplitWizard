@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { CalendarClock } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { CalendarClock, ChevronRight } from 'lucide-react'
 import { useAllExpenses } from '../hooks/useAllExpenses'
 import { useAuth } from '../hooks/useAuth'
 import { forecastByMonth, planProgress, type PlanProgress } from '../lib/forecast'
@@ -14,26 +15,32 @@ const monthLabel = (key: string) => {
 
 function PlanCard({ p, dim }: { p: PlanProgress; dim?: boolean }) {
   return (
-    <li
-      className={`rounded-lg border border-slate-200 bg-white p-3 dark:border-zinc-700 dark:bg-zinc-800 ${
-        dim ? 'opacity-70' : ''
-      }`}
-    >
-      <div className="flex justify-between">
-        <span className="font-medium">{p.baseDescription}</span>
-        <span className="text-sm text-slate-500">
-          {p.paid}/{p.total} paid
-        </span>
-      </div>
-      <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
-        <div
-          className="h-full bg-indigo-500"
-          style={{ width: `${(p.paid / p.total) * 100}%` }}
-        />
-      </div>
-      {p.nextDate && (
-        <div className="mt-1 text-xs text-slate-400">Next: {formatDate(p.nextDate)}</div>
-      )}
+    <li>
+      <Link
+        to={`/installments/${p.planId}`}
+        className={`block rounded-lg border border-slate-200 bg-white p-3 transition hover:border-indigo-300 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-indigo-600 ${
+          dim ? 'opacity-70' : ''
+        }`}
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-medium">{p.baseDescription}</span>
+          <span className="flex items-center gap-1 text-sm text-slate-500">
+            {p.paid}/{p.total} paid
+            <ChevronRight size={16} className="text-slate-400" />
+          </span>
+        </div>
+        <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100 dark:bg-zinc-700">
+          <div
+            className="h-full bg-indigo-500"
+            style={{ width: `${(p.paid / p.total) * 100}%` }}
+          />
+        </div>
+        {p.nextDate && (
+          <div className="mt-1 text-xs text-slate-400">
+            Next: {formatDate(p.nextDate)}
+          </div>
+        )}
+      </Link>
     </li>
   )
 }

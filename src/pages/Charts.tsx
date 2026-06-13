@@ -117,7 +117,7 @@ export function Charts() {
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={barData}>
               <XAxis dataKey="month" fontSize={10} />
-              <Tooltip />
+              <Tooltip contentStyle={{color: 'black'}} />
               <Bar dataKey="value" fill="#4f46e5" />
             </BarChart>
           </ResponsiveContainer>
